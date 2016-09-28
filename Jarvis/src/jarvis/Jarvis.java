@@ -11,8 +11,6 @@ import com.darkprograms.speech.recognizer.GSpeechResponseListener;
 import com.darkprograms.speech.recognizer.GoogleResponse;
 import jaco.mp3.player.MP3Player;
 import java.io.File;
-//import com.sun.speech.freetts.Voice;
-//import com.sun.speech.freetts.VoiceManager;
 import java.io.IOException;
 import java.io.InputStream;
 import static java.lang.Thread.sleep;
@@ -46,13 +44,14 @@ public class Jarvis {
         new Jarvis();
 
     }
-GSpeechResponseListener gSpeechListener;
+    GSpeechResponseListener gSpeechListener;
+
     public Jarvis() {
         dospeak("hello sir");
 //        playAudio();
         weather = new Weather();
-        
-      gSpeechListener=  new GSpeechResponseListener() {
+
+        gSpeechListener = new GSpeechResponseListener() {
 //            String old_text = "";
 
             public void onResponse(GoogleResponse gr) {
@@ -72,44 +71,43 @@ GSpeechResponseListener gSpeechListener;
                 if (bigOutput == null || bigOutput.length() <= output.length()) {
                     bigOutput = output;
 //                    System.out.println(output);
-                } 
-                    if (thread == null) {
-                        thread = new Thread() {
-                            @Override
-                            public void run() {
-                                counter = totalWaitTime;
+                }
+                if (thread == null) {
+                    thread = new Thread() {
+                        @Override
+                        public void run() {
+                            counter = totalWaitTime;
 
-                                try {
-                                    while (counter > 0) {
-                                        sleep(sleepTime);
-                                        counter -= sleepTime;
-                                    }
-                                    if (output != null || !output.replaceAll(" ", "").equals("")) {
-                                        output = "";
-                                        if (bigOutput != null && !bigOutput.replaceAll(" ", "").equals("")) {
-                                            if (!lastProcessRespond.equals(bigOutput)) {
-                                                processRespond(bigOutput);
-
-                                            }
-                                            lastProcessRespond="";
-                                            bigOutput = "";
-                                            deActivate();
-
-                                            activate();
-                                        }
-                                    }
-                                } catch (InterruptedException ex) {
-                                    Logger.getLogger(Jarvis.class.getName()).log(Level.SEVERE, null, ex);
+                            try {
+                                while (counter > 0) {
+                                    sleep(sleepTime);
+                                    counter -= sleepTime;
                                 }
-                                thread = null;
-                            }
-                        };
-                        thread.start();
-                    } else {
-                        counter = totalWaitTime;
+                                if (output != null || !output.replaceAll(" ", "").equals("")) {
+                                    output = "";
+                                    if (bigOutput != null && !bigOutput.replaceAll(" ", "").equals("")) {
+                                        if (!lastProcessRespond.equals(bigOutput)) {
+                                            processRespond(bigOutput);
 
-                    }
-                
+                                        }
+                                        lastProcessRespond = "";
+                                        bigOutput = "";
+                                        deActivate();
+
+                                        activate();
+                                    }
+                                }
+                            } catch (InterruptedException ex) {
+                                Logger.getLogger(Jarvis.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                            thread = null;
+                        }
+                    };
+                    thread.start();
+                } else {
+                    counter = totalWaitTime;
+
+                }
 
 //                if (gr != null && gr.getResponse() != null && !output.replaceAll(" ", "").equals("")) {
 //                    if (thread == null) {
@@ -132,9 +130,8 @@ GSpeechResponseListener gSpeechListener;
 //                }
             }
         };
-      
-              activate();
 
+        activate();
 
     }
     private Thread thread;
@@ -179,6 +176,48 @@ GSpeechResponseListener gSpeechListener;
             respondText = "";
         } else if (respond.replaceAll(" ", "").contains(name + "stop") || respond.replaceAll(" ", "").contains(name + "cancel")) {
             stopSpeak();
+            respondText = "";
+        } else if (respond.replaceAll(" ", "").contains(name + "bye") || respond.replaceAll(" ", "").contains("bye" + name)
+                || respond.replaceAll(" ", "").contains(name + "goodbye") || respond.replaceAll(" ", "").contains("goodbye" + name)
+                || respond.replaceAll(" ", "").contains(name + "see you") || respond.replaceAll(" ", "").contains("see you" + name)) {
+
+            turnEverythingOff();
+            respondText = "";
+        } else if (respond.replaceAll(" ", "").contains(name + "about") || respond.replaceAll(" ", "").contains("about" + name)) {
+            dospeak("I am a smart house application, made by nikos Gaitanis, known as tsoglani!.My purpose is to surve my master.");
+            respondText = "";
+        } else if (respond.replaceAll(" ", "").contains(name + "info") || respond.replaceAll(" ", "").contains("info" + name)
+                || respond.replaceAll(" ", "").contains(name + "information") || respond.replaceAll(" ", "").contains("information" + name)) {
+            dospeak("I am authorized to turn on or off the electrical devices, and asnswear to some of your question master.");
+            respondText = "";
+        } else if (respond.replaceAll(" ", "").contains("clever") && respond.replaceAll(" ", "").contains("areyou")) {
+            dospeak("I am as cleven as a mashine can be sir.");
+            respondText = "";
+        } else if (respond.replaceAll(" ", "").contains("clever") && (respond.replaceAll(" ", "").contains("nick") || respond.replaceAll(" ", "").contains("nikos")
+                || respond.replaceAll(" ", "").contains("tsoglani") || respond.replaceAll(" ", "").contains("master") || respond.replaceAll(" ", "").contains("boss"))) {
+            dospeak("Yes, he is very clever, I could say he is a jenious.");
+            respondText = "";
+        } else if (respond.replaceAll(" ", "").contains("howoldareyou" + name) || respond.replaceAll(" ", "").contains(name + "howoldareyou")
+                || respond.replaceAll(" ", "").contains("isyourage")) {
+            dospeak("I am a machine, I have no age, I am imortal.");
+            respondText = "";
+        } else if (respond.replaceAll(" ", "").contains("boss") || respond.replaceAll(" ", "").contains(name + "nick") || respond.replaceAll(" ", "").contains(name + "nikos")
+                || respond.replaceAll(" ", "").contains(name + "tsoglani") || respond.replaceAll(" ", "").contains(name + "master")
+                && (respond.replaceAll(" ", "").contains("pussy") || respond.replaceAll(" ", "").contains("gay") || respond.replaceAll(" ", "").contains("homo")
+                || respond.replaceAll(" ", "").contains("stupid") || respond.replaceAll(" ", "").contains("motherfucker") || respond.replaceAll(" ", "").contains("suck")
+                || respond.replaceAll(" ", "").contains("sucker") || respond.replaceAll(" ", "").contains("fool") || respond.replaceAll(" ", "").contains("simp")
+                || respond.replaceAll(" ", "").contains("dupe") || respond.replaceAll(" ", "").contains("simpleton") || respond.replaceAll(" ", "").contains("moron")
+                || respond.replaceAll(" ", "").contains("jackass") || respond.replaceAll(" ", "").contains("goof") || respond.replaceAll(" ", "").contains("slob")
+                || respond.replaceAll(" ", "").contains("booby") || respond.replaceAll(" ", "").contains("duffer") || respond.replaceAll(" ", "").contains("idiot"))) {
+
+            dospeak("No he is not, beware your words for my master sir.");
+            respondText = "";
+        } else if (respond.replaceAll(" ", "").contains("whatisyourname") || respond.replaceAll(" ", "").contains("what'syourname")) {
+            if (name.replaceAll(" ", "").equals("")) {
+                dospeak("I have no name.");
+            } else {
+                dospeak("My name is " + name + " sir.");
+            }
             respondText = "";
         } else if (respond.replaceAll(" ", "").contains("weatherin" + name) || respond.replaceAll(" ", "").contains(name + "weatherin")) {
             String[] list = respond.split("weather in");
@@ -273,6 +312,11 @@ GSpeechResponseListener gSpeechListener;
         }
     }
 
+    private void turnEverythingOff() {
+        dospeak("bye sir");
+        // turn all the lights off
+    }
+
     private String getFromWiki(String searchingText) throws MalformedURLException, IOException {
 //https://en.wikipedia.org/w/api.php?action=opensearch&search=java-programming&limit=1&format=json
         String[] list = searchingText.split(" ");
@@ -316,6 +360,11 @@ GSpeechResponseListener gSpeechListener;
     private void stopSpeak() {
         if (child != null) {
             child.destroyForcibly();
+
+        }
+        if (child != null) {
+            child.destroy();
+
         }
 
         if (mp3Player != null) {
@@ -323,6 +372,23 @@ GSpeechResponseListener gSpeechListener;
         }
 
     }
+
+    public void close() {
+        try {
+            stopSpeak();
+            if (mic != null) {
+                mic.close();
+            }
+
+            System.gc();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } catch (Throwable ex) {
+            ex.printStackTrace();
+        }
+
+    }
+
     Process child;
 ////sudo apt-get install espeak
 
@@ -362,8 +428,9 @@ GSpeechResponseListener gSpeechListener;
         }
         if (duplex != null) {
             try {
-                if(gSpeechListener!=null)
-                duplex.removeResponseListener(gSpeechListener);
+                if (gSpeechListener != null) {
+                    duplex.removeResponseListener(gSpeechListener);
+                }
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
