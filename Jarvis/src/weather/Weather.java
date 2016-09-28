@@ -8,7 +8,6 @@ package weather;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -161,7 +160,7 @@ String output="";
         public ServerLocation getLocation(String ipAddress) {
 
             File file = new File(
-                    "/home/tsoglani/NetBeansProjects/Jarvis/resources/location/GeoLiteCity.dat");
+                    jarvis.Jarvis.GeoCiyyLocation);
             return getLocation(ipAddress, file);
 
         }

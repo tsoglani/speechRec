@@ -40,6 +40,7 @@ public class Jarvis {
     private static Weather weather;
     private String output;
     private String bigOutput = "";
+    public static final String GeoCiyyLocation = "/home/tsoglani/NetBeansProjects/Jarvis/resources/location/GeoLiteCity.dat";
 
     public static void main(String[] args) {
         new Jarvis();
@@ -48,7 +49,7 @@ public class Jarvis {
 
     public Jarvis() {
         dospeak("hello sir");
-        playAudio();
+//        playAudio();
         weather = new Weather();
         activate();
 
@@ -94,39 +95,43 @@ public class Jarvis {
                 if (bigOutput == null || bigOutput.length() <= output.length()) {
                     bigOutput = output;
 //                    System.out.println(output);
-                }
+                } 
+                    if (thread == null) {
+                        thread = new Thread() {
+                            @Override
+                            public void run() {
+                                counter = totalWaitTime;
 
-                if (thread == null) {
-                    thread = new Thread() {
-                        @Override
-                        public void run() {
-                            counter = totalWaitTime;
-
-                            try {
-                                while (counter > 0) {
-                                    sleep(sleepTime);
-                                    counter -= sleepTime;
-                                }
-                                if (output != null || !output.replaceAll(" ", "").equals("")) {
-                                    output = "";
-                                    if (bigOutput != null && !bigOutput.replaceAll(" ", "").equals("")) {
-                                        processRespond(bigOutput);
-                                        bigOutput = "";
-                                        deActivate();
-                                        activate();
+                                try {
+                                    while (counter > 0) {
+                                        sleep(sleepTime);
+                                        counter -= sleepTime;
                                     }
-                                }
-                            } catch (InterruptedException ex) {
-                                Logger.getLogger(Jarvis.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                            thread = null;
-                        }
-                    };
-                    thread.start();
-                } else {
-                    counter = totalWaitTime;
+                                    if (output != null || !output.replaceAll(" ", "").equals("")) {
+                                        output = "";
+                                        if (bigOutput != null && !bigOutput.replaceAll(" ", "").equals("")) {
+                                            if (!lastProcessRespond.equals(bigOutput)) {
+                                                processRespond(bigOutput);
 
-                }
+                                            }
+                                            lastProcessRespond="";
+                                            bigOutput = "";
+//                                            deActivate();
+//                                            activate();
+                                        }
+                                    }
+                                } catch (InterruptedException ex) {
+                                    Logger.getLogger(Jarvis.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                                thread = null;
+                            }
+                        };
+                        thread.start();
+                    } else {
+                        counter = totalWaitTime;
+
+                    }
+                
 
 //                if (gr != null && gr.getResponse() != null && !output.replaceAll(" ", "").equals("")) {
 //                    if (thread == null) {
@@ -152,9 +157,10 @@ public class Jarvis {
     }
 
     String respondText = "";
+    private String lastProcessRespond = "";
 
     private void processRespond(String respond) {
-
+        lastProcessRespond = respond;
         System.out.println("respond::" + respond);
         if (respondText.replaceAll(" ", "").contains(name + "hi") || respondText.replaceAll(" ", "").contains(name + "hello")
                 || respondText.replaceAll(" ", "").contains("hi" + name) || respondText.replaceAll(" ", "").contains("hello" + name)) {
@@ -167,7 +173,7 @@ public class Jarvis {
                 || respond.replaceAll(" ", "").contains("hi" + name) || respond.replaceAll(" ", "").contains("hello" + name)) {
             dospeak("wellcome sir");
             respondText = "";
-        } else if (respond.replaceAll(" ", "").contains(name + "stop")||respond.replaceAll(" ", "").contains(name + "cancel")) {
+        } else if (respond.replaceAll(" ", "").contains(name + "stop") || respond.replaceAll(" ", "").contains(name + "cancel")) {
             stopSpeak();
             respondText = "";
         } else if (respond.replaceAll(" ", "").contains("weatherin" + name) || respond.replaceAll(" ", "").contains(name + "weatherin")) {
