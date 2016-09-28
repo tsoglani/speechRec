@@ -53,6 +53,7 @@ public class Weather {
         this.countryCode = countryCode;
 
         String description = null;
+        String output = null;
 
         try {
             OwmClient owm = new OwmClient();
@@ -65,26 +66,30 @@ public class Weather {
                     WeatherData.WeatherCondition weatherCondition = weather.getWeatherConditions().get(0);
 
                     description = weatherCondition.getDescription();
-                    description += ", wind will be " + weather.getWind().getSpeed() + " km per hour";
-
-                    description += ", Temperature will be around " + Math.round(weather.getTemp() - 273) + " degrees Celsius";
-                    description += ", Humidity will be at " + weather.getHumidity() + " per cent";
+//                    description += ", wind will be " + weather.getWind().getSpeed() + " km per hour";
+//
+//                    description += ", Temperature will be around " + Math.round(weather.getTemp() - 273) + " degrees Celsius";
+//                    description += ", Humidity will be at " + weather.getHumidity() + " per cent";
 
                     if (description.contains("rain") || description.contains("shower")) {
-                        System.out.println("No rain measures in " + city + " but reports of " + description);
+                       output="No rain measures in " + city + " but reports of " + description;
                     } else {
-                        System.out.println("No rain measures in " + city + ": " + description);
+                       output="No rain measures in " + city + ": " + description;
                     }
                 } else {
-                    System.out.println("It's raining in " + city + ": " + weather.getPrecipitation() + " mm/h");
+                  output="It's raining in " + city + ": " + weather.getPrecipitation() + " mm/h";
                 }
+                
+                output+=", Temperature will be around " + Math.round(weather.getTemp() - 273) + " degrees Celsium";
+                output+=", Humidity will be at " + weather.getHumidity() + " per cent";
+                System.out.println("output"+output);
             }
         } catch (IOException ex) {
             Logger.getLogger(Weather.class.getName()).log(Level.SEVERE, null, ex);
         } catch (JSONException ex) {
             ex.printStackTrace();
         }
-        return description;
+        return output;
 
     }
 
@@ -111,7 +116,7 @@ String output="";
 //                    description += ", Humidity is at " + weather.getHumidity() + " per cent";
 
                     if (description.contains("rain") || description.contains("shower")) {
-                        output+="No rain measures in Tokyo but reports of " + description;
+                        output+="No rain measures in "+ city +" but reports of " + description;
                        
                     } else {
                         output+="No rain measures in " + city + ": " + description;

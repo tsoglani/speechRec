@@ -46,36 +46,13 @@ public class Jarvis {
         new Jarvis();
 
     }
-
+GSpeechResponseListener gSpeechListener;
     public Jarvis() {
         dospeak("hello sir");
 //        playAudio();
         weather = new Weather();
-        activate();
-
-    }
-    private Thread thread;
-    private int counter;
-    private int sleepTime = 10;
-    private final int totalWaitTime = 2000;
-
-    public void activate() {
-        mic = new Microphone(FLACFileWriter.FLAC);
-
-        duplex = new GSpeechDuplex("AIzaSyBOti4mM-6x9WDnZIjIeyEU21OpBXqWBgw");
-
-        duplex.setLanguage("en");
-
-        try {
-            mic.open();
-            duplex.recognize(mic.getTargetDataLine(), mic.getAudioFormat());
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        } catch (LineUnavailableException ex) {
-            ex.printStackTrace();
-        }
-
-        duplex.addResponseListener(new GSpeechResponseListener() {
+        
+      gSpeechListener=  new GSpeechResponseListener() {
 //            String old_text = "";
 
             public void onResponse(GoogleResponse gr) {
@@ -116,8 +93,9 @@ public class Jarvis {
                                             }
                                             lastProcessRespond="";
                                             bigOutput = "";
-//                                            deActivate();
-//                                            activate();
+                                            deActivate();
+
+                                            activate();
                                         }
                                     }
                                 } catch (InterruptedException ex) {
@@ -153,7 +131,33 @@ public class Jarvis {
 ////                    processRespond(output);
 //                }
             }
-        });
+        };
+      
+              activate();
+
+
+    }
+    private Thread thread;
+    private int counter;
+    private int sleepTime = 10;
+    private final int totalWaitTime = 2000;
+
+    public void activate() {
+        mic = new Microphone(FLACFileWriter.FLAC);
+
+        duplex = new GSpeechDuplex("AIzaSyBOti4mM-6x9WDnZIjIeyEU21OpBXqWBgw");
+
+        duplex.setLanguage("en");
+
+        try {
+            mic.open();
+            duplex.recognize(mic.getTargetDataLine(), mic.getAudioFormat());
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } catch (LineUnavailableException ex) {
+            ex.printStackTrace();
+        }
+        duplex.addResponseListener(gSpeechListener);
     }
 
     String respondText = "";
@@ -358,7 +362,8 @@ public class Jarvis {
         }
         if (duplex != null) {
             try {
-                duplex.addResponseListener(null);
+                if(gSpeechListener!=null)
+                duplex.removeResponseListener(gSpeechListener);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
