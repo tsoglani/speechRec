@@ -21,10 +21,8 @@ import java.util.logging.Logger;
 import javax.sound.sampled.LineUnavailableException;
 import net.sourceforge.javaflacencoder.FLACFileWriter;
 import weather.Weather;
-import static java.lang.Thread.sleep;
 import java.text.DateFormat;
 import java.text.DateFormatSymbols;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -33,18 +31,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.Random;
-import java.util.StringTokenizer;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDateTime;
-import static java.lang.Thread.sleep;
-import static java.lang.Thread.sleep;
-import static java.lang.Thread.sleep;
-import static java.lang.Thread.sleep;
-import static java.lang.Thread.sleep;
-import static java.lang.Thread.sleep;
 import static java.lang.Thread.sleep;
 
 /**
@@ -77,7 +65,7 @@ public class Jarvis {
     private MP3Player mp3Player;
     File musicFile = new File(musicFilesLocation);
     int musicCounterID = ((int) (Math.random() * (musicFile.list().length - 1)));
-    private boolean isGoingToPlayNext = false;
+//    private boolean isGoingToPlayNext = false;
     Thread playerThread;
 
     // samples ::
@@ -89,7 +77,7 @@ public class Jarvis {
     // play music-play sound ... next song .. previous song .. cancel
     // find mobile-find phone
     // how old are you
-    // bye-goodbye-goodnight
+    // bye-goodbye-goodnight // want to close all the lights with this command
     // about
     // info - informations
     // weather
@@ -103,12 +91,14 @@ public class Jarvis {
     // turn on-off all 
     // turn on-off all in n time except ...
     // turn on-off all in n time  
-// what day is today 
-    //time
-    //date
+    // what day is today 
+    //time now/current
+    //date now/current
     //alarm in N time --- example alarm in 30 seconds
     //alarm at specific time --- example alarm at eight and ten //  alarm at half past ten //alarm at ten to ten
     // time in (City) px London/Athens
+    // date in (City) px London/Athens
+    // date and time in (City) px London/Athens
 //want to do 
     //implement raspberry and create timer methods
     //better speech voice
@@ -126,11 +116,11 @@ public class Jarvis {
     public Jarvis() {
 //        System.out.println("getTimeIn:" + getTimeIn("Greece"));
 
-        dospeak("hello sir");
-        processRespond("date and time in Athens");
+        dospeak("hello");
 //        playAudio();
 //        findMobile();
         weather = new Weather();
+        processRespond("how old are you");
 
         gSpeechListener = new GSpeechResponseListener() {
 //            String old_text = "";
@@ -236,8 +226,588 @@ public class Jarvis {
 
     private void processRespond(String respond) {
         lastProcessRespond = respond;
+
+        boolean foundCommand = false;
         System.out.println("respond::" + respond);
-        if (respond.replaceAll(" ", "").contains("time") && respond.replaceAll(" ", "").contains("date") && respond.replaceAll(" ", "").contains("in")) {
+
+        if (respond.replaceAll(
+                " ", "").contains(name)
+                && (respond.replaceAll(" ", "").contains("on")
+                || respond.replaceAll(" ", "").contains("open")
+                || respond.replaceAll(" ", "").contains("enable")
+                || respond.replaceAll(" ", "").contains("activate"))
+                && (respond.replaceAll(" ", "").contains("all")
+                || respond.replaceAll(" ", "").contains("everything"))) {
+            boolean found = false;
+
+            if (respond.contains("except")) {
+                if (respond.contains("in ") || respond.contains("time")) {
+                    try {
+                        String timeContainsText = null;
+                        if (respond.contains("in ")) {
+                            timeContainsText = respond.split("in ")[1];
+                        } else if (respond.contains("time")) {
+                            timeContainsText = respond.split("time")[1];
+
+                        }
+                        if (timeContainsText == null || timeContainsText.replaceAll(" ", "").equals("")) {
+                            dospeak("can you repeat the command sir?");
+                            System.out.println("repeat command");
+                            return;
+                        }
+
+                        String[] wordsList = timeContainsText.split(" ");
+                        for (String time : wordsList) {
+
+//                            String time = timeContainsText.split(" ")[0];
+                            String timeUnit = timeContainsText.substring(time.length(), timeContainsText.length());
+                            int number = 0;
+                            try {
+                                number = Integer.parseInt(time);
+                            } catch (Exception e) {
+                                number = inNumerals(time);
+
+                            }
+                            if (number == 0 && (!time.equals("0") || !time.equals("00") || !time.equalsIgnoreCase("zero"))) {
+                                continue;
+                            }
+                            found = true;
+                            if (timeUnit.contains("minute")) {
+                                if (number > 1) {
+                                    timeUnit = "minutes";
+                                } else {
+                                    timeUnit = "minute";
+                                }
+                            } else if (timeUnit.contains("sec")) {
+                                if (number > 1) {
+                                    timeUnit = "seconds";
+                                } else {
+                                    timeUnit = "second";
+                                }
+                            } else if (timeUnit.contains("hour")) {
+                                if (number > 1) {
+                                    timeUnit = "hours";
+                                } else {
+                                    timeUnit = "hour";
+                                }
+                            } else if (number > 1) {
+                                timeUnit = "minutes";
+                            } else {
+                                timeUnit = "minute";
+                            }
+
+                            String cmd = respond.split("except")[1];
+                            for (String str : SH.outputPowerCommands) {
+                                if (cmd.contains(str)) {
+                                    foundCommand = true;
+                                    turnOnAllDeviceExeptInNTime(str, number, timeUnit);
+                                    break;
+                                }
+                            }
+                        }
+                        if (!found) {
+                            System.out.println("Can you repeat the command sir ?");
+
+                            dospeak("Can you repeat the command sir ?");
+
+                        }
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    foundCommand = true;
+                    openAllExcept(respond.split("except")[1]);
+                }
+
+            } else if (respond.contains("in ") || respond.contains("time")) {
+
+                try {
+                    String timeContainsText = null;
+                    if (respond.contains("in ")) {
+                        timeContainsText = respond.split("in ")[1];
+                    } else if (respond.contains("time")) {
+                        timeContainsText = respond.split("time")[1];
+
+                    }
+                    if (timeContainsText == null) {
+                        return;
+                    }
+
+                    String[] wordsList = timeContainsText.split(" ");
+                    for (String time : wordsList) {
+
+//                            String time = timeContainsText.split(" ")[0];
+                        String timeUnit = timeContainsText.substring(time.length(), timeContainsText.length());
+                        int number = 0;
+                        try {
+                            number = Integer.parseInt(time);
+                        } catch (Exception e) {
+                            number = inNumerals(time);
+
+                        }
+                        if (number == 0 && (!time.equals("0") || !time.equals("00") || !time.equalsIgnoreCase("zero"))) {
+                            continue;
+                        }
+                        found = true;
+                        if (timeUnit.contains("minute")) {
+                            if (number > 1) {
+                                timeUnit = "minutes";
+                            } else {
+                                timeUnit = "minute";
+                            }
+                        } else if (timeUnit.contains("sec")) {
+                            if (number > 1) {
+                                timeUnit = "seconds";
+                            } else {
+                                timeUnit = "second";
+                            }
+                        } else if (timeUnit.contains("hour")) {
+                            if (number > 1) {
+                                timeUnit = "hours";
+                            } else {
+                                timeUnit = "hour";
+                            }
+                        } else if (number > 1) {
+                            timeUnit = "minutes";
+                        } else {
+                            timeUnit = "minute";
+                        }
+                        foundCommand = true;
+                        turnOnAllDeviceInNTime(number, timeUnit);
+                    }
+                    if (!found) {
+                        System.out.println("Can you repeat the command sir ?");
+
+                        dospeak("Can you repeat the command sir ?");
+
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else {
+                foundCommand = true;
+                openAll();
+            }
+//            if (found) {
+//                dospeak("right away sir.");
+//            }
+//                respond = "";
+//                lastProcessRespond = "";
+
+        } else if (respond.replaceAll(" ", "").contains(name)
+                && (respond.replaceAll(" ", "").contains("on")
+                || respond.replaceAll(" ", "").contains("open")
+                || respond.replaceAll(" ", "").contains("enable")
+                || respond.replaceAll(" ", "").contains("activate"))) {
+            boolean found = false;
+
+            for (String outCommand : SH.outputPowerCommands) {
+                if (respond.contains(outCommand)) {
+                    if (respond.contains("in ") || respond.contains("time")) {
+                        try {
+                            String timeContainsText = null;
+                            if (respond.contains("in ")) {
+                                timeContainsText = respond.split("in ")[1];
+                            } else if (respond.contains("time")) {
+                                timeContainsText = respond.split("time")[1];
+
+                            }
+                            if (timeContainsText == null || timeContainsText.replaceAll(" ", "").equals("")) {
+                                dospeak("can you repeat the command sir?");
+                                System.out.println("repeat command");
+                                return;
+                            }
+
+                            String[] wordsList = timeContainsText.split(" ");
+                            for (String time : wordsList) {
+
+//                            String time = timeContainsText.split(" ")[0];
+                                String timeUnit = timeContainsText.substring(time.length(), timeContainsText.length());
+                                int number = 0;
+                                try {
+                                    number = Integer.parseInt(time);
+                                } catch (Exception e) {
+                                    number = inNumerals(time);
+
+                                }
+                                if (number == 0 && (!time.equals("0") || !time.equals("00") || !time.equalsIgnoreCase("zero"))) {
+                                    continue;
+                                }
+                                found = true;
+                                if (timeUnit.contains("hour")) {
+                                    if (number > 1) {
+                                        timeUnit = "hours";
+                                    } else {
+                                        timeUnit = "hour";
+                                    }
+                                } else if (timeUnit.contains("minute")) {
+                                    if (number > 1) {
+                                        timeUnit = "minutes";
+                                    } else {
+                                        timeUnit = "minute";
+                                    }
+                                } else if (timeUnit.contains("sec")) {
+                                    if (number > 1) {
+                                        timeUnit = "seconds";
+                                    } else {
+                                        timeUnit = "second";
+                                    }
+                                } else if (number > 1) {
+                                    timeUnit = "minutes";
+                                } else {
+                                    timeUnit = "minute";
+                                }
+                                foundCommand = true;
+                                turnOnDeviceInNTime(outCommand, number, timeUnit);
+                            }
+                            if (!found) {
+                                System.out.println("Can you repeat the command sir ?");
+
+                                dospeak("Can you repeat the command sir ?");
+
+                            }
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        foundCommand = true;
+                        turnOnDevice(outCommand);
+                    }
+                }
+            }
+//                respond = "";
+//                lastProcessRespond = "";
+        } else if (respond.replaceAll(
+                " ", "").contains(name)
+                && (respond.replaceAll(" ", "").contains("off")
+                || respond.replaceAll(" ", "").contains("close")
+                || respond.replaceAll(" ", "").contains("disable")
+                || respond.replaceAll(" ", "").contains("deactivate"))
+                && (respond.replaceAll(" ", "").contains("all")
+                || respond.replaceAll(" ", "").contains("everything"))) {
+
+            if (respond.contains("except")) {
+                if (respond.contains("in ") || respond.contains("time")) {
+                    try {
+                        String timeContainsText = null;
+                        if (respond.contains("in ")) {
+                            timeContainsText = respond.split("in ")[1];
+                        } else if (respond.contains("time")) {
+                            timeContainsText = respond.split("time")[1];
+
+                        }
+                        if (timeContainsText == null || timeContainsText.replaceAll(" ", "").equals("")) {
+                            dospeak("can you repeat the command sir?");
+                            System.out.println("repeat command");
+                            return;
+                        }
+
+                        boolean found = false;
+                        String[] wordsList = timeContainsText.split(" ");
+                        for (String time : wordsList) {
+
+//                            String time = timeContainsText.split(" ")[0];
+                            String timeUnit = timeContainsText.substring(time.length(), timeContainsText.length());
+                            int number = 0;
+                            try {
+                                number = Integer.parseInt(time);
+                            } catch (Exception e) {
+                                number = inNumerals(time);
+
+                            }
+                            if (number == 0 && (!time.equals("0") || !time.equals("00") || !time.equalsIgnoreCase("zero"))) {
+                                continue;
+                            }
+                            found = true;
+                            if (timeUnit.contains("minute")) {
+                                if (number > 1) {
+                                    timeUnit = "minutes";
+                                } else {
+                                    timeUnit = "minute";
+                                }
+                            } else if (timeUnit.contains("sec")) {
+                                if (number > 1) {
+                                    timeUnit = "seconds";
+                                } else {
+                                    timeUnit = "second";
+                                }
+                            } else if (timeUnit.contains("hour")) {
+                                if (number > 1) {
+                                    timeUnit = "hours";
+                                } else {
+                                    timeUnit = "hour";
+                                }
+                            } else if (number > 1) {
+                                timeUnit = "minutes";
+                            } else {
+                                timeUnit = "minute";
+                            }
+
+                            String cmd = respond.split("except")[1];
+                            for (String str : SH.outputPowerCommands) {
+                                if (cmd.contains(str)) {
+                                    foundCommand = true;
+                                    turnOffAllDeviceExeptInNTime(str, number, timeUnit);
+                                    break;
+                                }
+                            }
+                        }
+                        if (!found) {
+
+                            System.out.println("Can you repeat the command sir ?");
+                            dospeak("Can you repeat the command sir ?");
+
+                        }
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    foundCommand = true;
+                    closeAllExcept(respond.split("except")[1]);
+                }
+
+            } else if (respond.contains("in ") || respond.contains("time")) {
+                try {
+                    String timeContainsText = null;
+                    if (respond.contains("in ")) {
+                        timeContainsText = respond.split("in ")[1];
+                    } else if (respond.contains("time")) {
+                        timeContainsText = respond.split("time")[1];
+
+                    }
+                    if (timeContainsText == null || timeContainsText.replaceAll(" ", "").equals("")) {
+                        dospeak("can you repeat the command sir?");
+                        System.out.println("repeat command");
+                        return;
+                    }
+
+                    boolean found = false;
+                    String[] wordsList = timeContainsText.split(" ");
+                    for (String time : wordsList) {
+
+//                            String time = timeContainsText.split(" ")[0];
+                        String timeUnit = timeContainsText.substring(time.length(), timeContainsText.length());
+                        int number = 0;
+                        try {
+                            number = Integer.parseInt(time);
+                        } catch (Exception e) {
+                            number = inNumerals(time);
+
+                        }
+                        if (number == 0 && (!time.equals("0") || !time.equals("00") || !time.equalsIgnoreCase("zero"))) {
+                            continue;
+                        }
+                        found = true;
+                        if (timeUnit.contains("minute")) {
+                            if (number > 1) {
+                                timeUnit = "minutes";
+                            } else {
+                                timeUnit = "minute";
+                            }
+                        } else if (timeUnit.contains("sec")) {
+                            if (number > 1) {
+                                timeUnit = "seconds";
+                            } else {
+                                timeUnit = "second";
+                            }
+                        } else if (timeUnit.contains("hour")) {
+                            if (number > 1) {
+                                timeUnit = "hours";
+                            } else {
+                                timeUnit = "hour";
+                            }
+                        } else if (number > 1) {
+                            timeUnit = "minutes";
+                        } else {
+                            timeUnit = "minute";
+                        }
+                        foundCommand = true;
+                        turnOffAllDeviceInNTime(number, timeUnit);
+                    }
+                    if (!found) {
+                        System.out.println("Can you repeat the command sir ?");
+
+                        dospeak("Can you repeat the command sir ?");
+
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else {
+                foundCommand = true;
+                closeAll();
+            }
+//            if (foundCommand) {
+//                
+//                dospeak("right away sir.");
+//            }
+//                respond = "";
+//                lastProcessRespond = "";
+
+        } else if (respond.replaceAll(
+                " ", "").contains(name)
+                && (respond.replaceAll(" ", "").contains("off")
+                || respond.replaceAll(" ", "").contains("close")
+                || respond.replaceAll(" ", "").contains("disable")
+                || respond.replaceAll(" ", "").contains("deactivate"))) {
+
+            for (String outCommand : SH.outputPowerCommands) {
+                if (respond.contains(outCommand)) {
+                    if (respond.contains("in ") || respond.contains("time")) {
+                        try {
+                            String timeContainsText = null;
+                            if (respond.contains("in ")) {
+                                timeContainsText = respond.split("in ")[1];
+                            } else if (respond.contains("time")) {
+                                timeContainsText = respond.split("time")[1];
+
+                            }
+                            if (timeContainsText == null || timeContainsText.replaceAll(" ", "").equals("")) {
+                                dospeak("can you repeat the command sir?");
+                                System.out.println("repeat command");
+                                return;
+                            }
+
+                            boolean found = false;
+                            String[] wordsList = timeContainsText.split(" ");
+                            for (String time : wordsList) {
+
+//                            String time = timeContainsText.split(" ")[0];
+                                String timeUnit = timeContainsText.substring(time.length(), timeContainsText.length());
+                                int number = 0;
+                                try {
+                                    number = Integer.parseInt(time);
+                                } catch (Exception e) {
+                                    number = inNumerals(time);
+
+                                }
+                                if (number == 0 && (!time.equals("0") || !time.equals("00") || !time.equalsIgnoreCase("zero"))) {
+                                    continue;
+                                }
+                                found = true;
+                                if (timeUnit.contains("minute")) {
+                                    if (number > 1) {
+                                        timeUnit = "minutes";
+                                    } else {
+                                        timeUnit = "minute";
+                                    }
+                                } else if (timeUnit.contains("sec")) {
+                                    if (number > 1) {
+                                        timeUnit = "seconds";
+                                    } else {
+                                        timeUnit = "second";
+                                    }
+                                } else if (timeUnit.contains("hour")) {
+                                    if (number > 1) {
+                                        timeUnit = "hours";
+                                    } else {
+                                        timeUnit = "hour";
+                                    }
+                                } else if (number > 1) {
+                                    timeUnit = "minutes";
+                                } else {
+                                    timeUnit = "minute";
+                                }
+                                foundCommand = true;
+                                turnOffDeviceInNTime(outCommand, number, timeUnit);
+                            }
+                            if (!found) {
+                                System.out.println("Can you repeat the command sir ?");
+
+                                dospeak("Can you repeat the command sir ?");
+
+                            }
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        foundCommand = true;
+                        turnOffDevice(outCommand);
+                    }
+                }
+            }
+//                respond = "";
+//                lastProcessRespond = "";
+        }
+
+        if (respond.replaceAll(
+                " ", "").contains("whatis")
+                || respond.replaceAll(" ", "").contains(name + "whatis")
+                || respond.replaceAll(" ", "").contains(name + "what's")
+                || respond.replaceAll(" ", "").contains("search")) {
+            System.out.println("wikiii");
+            String spStr = null;
+            try {
+
+                if (respond.replaceAll(" ", "").contains("whatis")) {
+                    spStr = getFromWiki(respond.split("what is")[1]);
+                } else if (respond.replaceAll(" ", "").contains("what's")) {
+                    spStr = getFromWiki(respond.split("what's")[1]);
+                } else if (respond.replaceAll(" ", "").contains("search")) {
+                    spStr = getFromWiki(respond.split("search")[1]);
+                }
+                if (spStr != null) {
+//                    System.out.println("getFromWiki:" + spStr);
+                    dospeak(spStr);
+                    foundCommand = true;
+                }
+            } catch (Exception ex) {
+                Logger.getLogger(Jarvis.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+//                    respond = "";
+//                    lastProcessRespond = "";
+        }
+
+//        if (!foundCommand) {
+        if (respond.replaceAll(
+                " ", "").contains("weatherin" + name) || respond.replaceAll(" ", "").contains(name + "weatherin")) {
+            String[] list = respond.split("weather in");
+            try {
+                if (list.length > 1) {
+                    String curentCity = list[1];
+                    if (curentCity.length() > 1) {
+                        if (curentCity.contains(" of ")) {
+                            String[] surentList = curentCity.split(" of ");
+                            curentCity = surentList[0];
+                            String countryCode = surentList[1];
+                            String weatherInfo = weather.getWeather(curentCity.substring(1, curentCity.length()), countryCode);
+                            dospeak(weatherInfo);
+                        } else if (curentCity != null && !curentCity.equals("")) {
+                            String weatherInfo = weather.getWeather(curentCity.substring(1, curentCity.length()));
+                            dospeak(weatherInfo);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+//            dospeak("wellcome sir");
+
+//            String weatherInfo = weather.getWeather(curentCity);
+//            dospeak(weatherInfo);
+            respond = "";
+            lastProcessRespond = "";
+        } else if (respond.replaceAll(
+                " ", "").contains("weather" + name) || respond.replaceAll(" ", "").contains(name + "weather")) {
+            System.out.println("weather");
+            String weatherInfo;
+            if (respond.replaceAll(" ", "").contains("forecast")) {
+                weatherInfo = weather.getForecastWeatherAtCity("Ierapetra");
+
+            } else {
+                weatherInfo = weather.getWeather("Ierapetra");
+            }
+            dospeak(weatherInfo);
+            respond = "";
+            lastProcessRespond = "";
+        } else if (respond.replaceAll(" ", "").contains("time") && respond.replaceAll(" ", "").contains("date") && respond.replaceAll(" ", "").contains("in")) {
             String[] words = respond.split(" ");
             for (String s : words) {
                 if (!s.equals("date") || !s.equals("in") || !s.equals("current") || !s.equals("now") || !s.equals("time")) {
@@ -247,7 +817,7 @@ public class Jarvis {
                     }
                 }
             }
-        }else if ((respond.replaceAll(
+        } else if ((respond.replaceAll(
                 " ", "").contains("date" + name) || respond.replaceAll(
                 " ", "").contains(name + "date") || respond.replaceAll(
                 " ", "").contains(name + "calendar") || respond.replaceAll(
@@ -280,6 +850,7 @@ public class Jarvis {
             System.out.println("current time");
             for (String s : words) {
                 if (!s.equals("time") || !s.equals("in") || !s.equals("current") || !s.equals("now")) {
+
                     String info = getTimeIn(s, true);
                     if (info != null) {
                         dospeak(info);
@@ -297,7 +868,7 @@ public class Jarvis {
                     }
                 }
             }
-        }  else if (respond.replaceAll(
+        } else if (respond.replaceAll(
                 " ", "").contains(name + "alarm") || respond.replaceAll(" ", "").contains("alarm" + name)) {
             if (respond.contains("in ") || respond.contains("time")) {
                 try {
@@ -588,698 +1159,147 @@ public class Jarvis {
                 }
                 respond = "";
                 lastProcessRespond = "";
-            } else if (respond.replaceAll(
-                    " ", "").contains(name)
-                    && (respond.replaceAll(" ", "").contains("off")
-                    || respond.replaceAll(" ", "").contains("close")
-                    || respond.replaceAll(" ", "").contains("disable")
-                    || respond.replaceAll(" ", "").contains("deactivate"))
-                    && (respond.replaceAll(" ", "").contains("all")
-                    || respond.replaceAll(" ", "").contains("everything"))) {
-
-                if (respond.contains("except")) {
-                    if (respond.contains("in ") || respond.contains("time")) {
-                        try {
-                            String timeContainsText = null;
-                            if (respond.contains("in ")) {
-                                timeContainsText = respond.split("in ")[1];
-                            } else if (respond.contains("time")) {
-                                timeContainsText = respond.split("time")[1];
-
-                            }
-                            if (timeContainsText == null || timeContainsText.replaceAll(" ", "").equals("")) {
-                                dospeak("can you repeat the command sir?");
-                                System.out.println("repeat command");
-                                return;
-                            }
-
-                            boolean found = false;
-                            String[] wordsList = timeContainsText.split(" ");
-                            for (String time : wordsList) {
-
-//                            String time = timeContainsText.split(" ")[0];
-                                String timeUnit = timeContainsText.substring(time.length(), timeContainsText.length());
-                                int number = 0;
-                                try {
-                                    number = Integer.parseInt(time);
-                                } catch (Exception e) {
-                                    number = inNumerals(time);
-
-                                }
-                                if (number == 0 && (!time.equals("0") || !time.equals("00") || !time.equalsIgnoreCase("zero"))) {
-                                    continue;
-                                }
-                                found = true;
-                                if (timeUnit.contains("minute")) {
-                                    if (number > 1) {
-                                        timeUnit = "minutes";
-                                    } else {
-                                        timeUnit = "minute";
-                                    }
-                                } else if (timeUnit.contains("sec")) {
-                                    if (number > 1) {
-                                        timeUnit = "seconds";
-                                    } else {
-                                        timeUnit = "second";
-                                    }
-                                } else if (timeUnit.contains("hour")) {
-                                    if (number > 1) {
-                                        timeUnit = "hours";
-                                    } else {
-                                        timeUnit = "hour";
-                                    }
-                                } else if (number > 1) {
-                                    timeUnit = "minutes";
-                                } else {
-                                    timeUnit = "minute";
-                                }
-
-                                String cmd = respond.split("except")[1];
-                                for (String str : SH.outputPowerCommands) {
-                                    if (cmd.contains(str)) {
-                                        turnOffAllDeviceExeptInNTime(str, number, timeUnit);
-                                        break;
-                                    }
-                                }
-                            }
-                            if (!found) {
-                                System.out.println("Can you repeat the command sir ?");
-                                dospeak("Can you repeat the command sir ?");
-
-                            }
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    } else {
-                        closeAllExcept(respond.split("except")[1]);
-                    }
-
-                } else if (respond.contains("in ") || respond.contains("time")) {
-                    try {
-                        String timeContainsText = null;
-                        if (respond.contains("in ")) {
-                            timeContainsText = respond.split("in ")[1];
-                        } else if (respond.contains("time")) {
-                            timeContainsText = respond.split("time")[1];
-
-                        }
-                        if (timeContainsText == null || timeContainsText.replaceAll(" ", "").equals("")) {
-                            dospeak("can you repeat the command sir?");
-                            System.out.println("repeat command");
-                            return;
-                        }
-
-                        boolean found = false;
-                        String[] wordsList = timeContainsText.split(" ");
-                        for (String time : wordsList) {
-
-//                            String time = timeContainsText.split(" ")[0];
-                            String timeUnit = timeContainsText.substring(time.length(), timeContainsText.length());
-                            int number = 0;
-                            try {
-                                number = Integer.parseInt(time);
-                            } catch (Exception e) {
-                                number = inNumerals(time);
-
-                            }
-                            if (number == 0 && (!time.equals("0") || !time.equals("00") || !time.equalsIgnoreCase("zero"))) {
-                                continue;
-                            }
-                            found = true;
-                            if (timeUnit.contains("minute")) {
-                                if (number > 1) {
-                                    timeUnit = "minutes";
-                                } else {
-                                    timeUnit = "minute";
-                                }
-                            } else if (timeUnit.contains("sec")) {
-                                if (number > 1) {
-                                    timeUnit = "seconds";
-                                } else {
-                                    timeUnit = "second";
-                                }
-                            } else if (timeUnit.contains("hour")) {
-                                if (number > 1) {
-                                    timeUnit = "hours";
-                                } else {
-                                    timeUnit = "hour";
-                                }
-                            } else if (number > 1) {
-                                timeUnit = "minutes";
-                            } else {
-                                timeUnit = "minute";
-                            }
-
-                            turnOffAllDeviceInNTime(number, timeUnit);
-                        }
-                        if (!found) {
-                            System.out.println("Can you repeat the command sir ?");
-
-                            dospeak("Can you repeat the command sir ?");
-
-                        }
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    closeAll();
-                }
-                dospeak("right away sir.");
-                respond = "";
-                lastProcessRespond = "";
-
-            } else if (respond.replaceAll(
-                    " ", "").contains(name)
-                    && (respond.replaceAll(" ", "").contains("on")
-                    || respond.replaceAll(" ", "").contains("open")
-                    || respond.replaceAll(" ", "").contains("enable")
-                    || respond.replaceAll(" ", "").contains("activate"))
-                    && (respond.replaceAll(" ", "").contains("all")
-                    || respond.replaceAll(" ", "").contains("everything"))) {
-
-                if (respond.contains("except")) {
-                    if (respond.contains("in ") || respond.contains("time")) {
-                        try {
-                            String timeContainsText = null;
-                            if (respond.contains("in ")) {
-                                timeContainsText = respond.split("in ")[1];
-                            } else if (respond.contains("time")) {
-                                timeContainsText = respond.split("time")[1];
-
-                            }
-                            if (timeContainsText == null || timeContainsText.replaceAll(" ", "").equals("")) {
-                                dospeak("can you repeat the command sir?");
-                                System.out.println("repeat command");
-                                return;
-                            }
-
-                            boolean found = false;
-                            String[] wordsList = timeContainsText.split(" ");
-                            for (String time : wordsList) {
-
-//                            String time = timeContainsText.split(" ")[0];
-                                String timeUnit = timeContainsText.substring(time.length(), timeContainsText.length());
-                                int number = 0;
-                                try {
-                                    number = Integer.parseInt(time);
-                                } catch (Exception e) {
-                                    number = inNumerals(time);
-
-                                }
-                                if (number == 0 && (!time.equals("0") || !time.equals("00") || !time.equalsIgnoreCase("zero"))) {
-                                    continue;
-                                }
-                                found = true;
-                                if (timeUnit.contains("minute")) {
-                                    if (number > 1) {
-                                        timeUnit = "minutes";
-                                    } else {
-                                        timeUnit = "minute";
-                                    }
-                                } else if (timeUnit.contains("sec")) {
-                                    if (number > 1) {
-                                        timeUnit = "seconds";
-                                    } else {
-                                        timeUnit = "second";
-                                    }
-                                } else if (timeUnit.contains("hour")) {
-                                    if (number > 1) {
-                                        timeUnit = "hours";
-                                    } else {
-                                        timeUnit = "hour";
-                                    }
-                                } else if (number > 1) {
-                                    timeUnit = "minutes";
-                                } else {
-                                    timeUnit = "minute";
-                                }
-
-                                String cmd = respond.split("except")[1];
-                                for (String str : SH.outputPowerCommands) {
-                                    if (cmd.contains(str)) {
-                                        turnOnAllDeviceExeptInNTime(str, number, timeUnit);
-                                        break;
-                                    }
-                                }
-                            }
-                            if (!found) {
-                                System.out.println("Can you repeat the command sir ?");
-
-                                dospeak("Can you repeat the command sir ?");
-
-                            }
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    } else {
-                        openAllExcept(respond.split("except")[1]);
-                    }
-
-                } else if (respond.contains("in ") || respond.contains("time")) {
-                    try {
-                        String timeContainsText = null;
-                        if (respond.contains("in ")) {
-                            timeContainsText = respond.split("in ")[1];
-                        } else if (respond.contains("time")) {
-                            timeContainsText = respond.split("time")[1];
-
-                        }
-                        if (timeContainsText == null) {
-                            return;
-                        }
-
-                        boolean found = false;
-                        String[] wordsList = timeContainsText.split(" ");
-                        for (String time : wordsList) {
-
-//                            String time = timeContainsText.split(" ")[0];
-                            String timeUnit = timeContainsText.substring(time.length(), timeContainsText.length());
-                            int number = 0;
-                            try {
-                                number = Integer.parseInt(time);
-                            } catch (Exception e) {
-                                number = inNumerals(time);
-
-                            }
-                            if (number == 0 && (!time.equals("0") || !time.equals("00") || !time.equalsIgnoreCase("zero"))) {
-                                continue;
-                            }
-                            found = true;
-                            if (timeUnit.contains("minute")) {
-                                if (number > 1) {
-                                    timeUnit = "minutes";
-                                } else {
-                                    timeUnit = "minute";
-                                }
-                            } else if (timeUnit.contains("sec")) {
-                                if (number > 1) {
-                                    timeUnit = "seconds";
-                                } else {
-                                    timeUnit = "second";
-                                }
-                            } else if (timeUnit.contains("hour")) {
-                                if (number > 1) {
-                                    timeUnit = "hours";
-                                } else {
-                                    timeUnit = "hour";
-                                }
-                            } else if (number > 1) {
-                                timeUnit = "minutes";
-                            } else {
-                                timeUnit = "minute";
-                            }
-
-                            turnOnAllDeviceInNTime(number, timeUnit);
-                        }
-                        if (!found) {
-                            System.out.println("Can you repeat the command sir ?");
-
-                            dospeak("Can you repeat the command sir ?");
-
-                        }
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    openAll();
-                }
-                dospeak("right away sir.");
-                respond = "";
-                lastProcessRespond = "";
-
-            } else if (respond.replaceAll(" ", "").contains(name)
-                    && (respond.replaceAll(" ", "").contains("on")
-                    || respond.replaceAll(" ", "").contains("open")
-                    || respond.replaceAll(" ", "").contains("enable")
-                    || respond.replaceAll(" ", "").contains("activate"))) {
-
-                for (String outCommand : SH.outputPowerCommands) {
-                    if (respond.contains(outCommand)) {
-                        if (respond.contains("in ") || respond.contains("time")) {
-                            try {
-                                String timeContainsText = null;
-                                if (respond.contains("in ")) {
-                                    timeContainsText = respond.split("in ")[1];
-                                } else if (respond.contains("time")) {
-                                    timeContainsText = respond.split("time")[1];
-
-                                }
-                                if (timeContainsText == null || timeContainsText.replaceAll(" ", "").equals("")) {
-                                    dospeak("can you repeat the command sir?");
-                                    System.out.println("repeat command");
-                                    return;
-                                }
-
-                                boolean found = false;
-                                String[] wordsList = timeContainsText.split(" ");
-                                for (String time : wordsList) {
-
-//                            String time = timeContainsText.split(" ")[0];
-                                    String timeUnit = timeContainsText.substring(time.length(), timeContainsText.length());
-                                    int number = 0;
-                                    try {
-                                        number = Integer.parseInt(time);
-                                    } catch (Exception e) {
-                                        number = inNumerals(time);
-
-                                    }
-                                    if (number == 0 && (!time.equals("0") || !time.equals("00") || !time.equalsIgnoreCase("zero"))) {
-                                        continue;
-                                    }
-                                    found = true;
-                                    if (timeUnit.contains("hour")) {
-                                        if (number > 1) {
-                                            timeUnit = "hours";
-                                        } else {
-                                            timeUnit = "hour";
-                                        }
-                                    } else if (timeUnit.contains("minute")) {
-                                        if (number > 1) {
-                                            timeUnit = "minutes";
-                                        } else {
-                                            timeUnit = "minute";
-                                        }
-                                    } else if (timeUnit.contains("sec")) {
-                                        if (number > 1) {
-                                            timeUnit = "seconds";
-                                        } else {
-                                            timeUnit = "second";
-                                        }
-                                    } else if (number > 1) {
-                                        timeUnit = "minutes";
-                                    } else {
-                                        timeUnit = "minute";
-                                    }
-
-                                    turnOnDeviceInNTime(outCommand, number, timeUnit);
-                                }
-                                if (!found) {
-                                    System.out.println("Can you repeat the command sir ?");
-
-                                    dospeak("Can you repeat the command sir ?");
-
-                                }
-
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        } else {
-                            turnOnDevice(outCommand);
-                        }
-                    }
-                }
-                respond = "";
-                lastProcessRespond = "";
-            } else if (respond.replaceAll(
-                    " ", "").contains(name)
-                    && (respond.replaceAll(" ", "").contains("off")
-                    || respond.replaceAll(" ", "").contains("close")
-                    || respond.replaceAll(" ", "").contains("disable")
-                    || respond.replaceAll(" ", "").contains("deactivate"))) {
-
-                for (String outCommand : SH.outputPowerCommands) {
-                    if (respond.contains(outCommand)) {
-                        if (respond.contains("in ") || respond.contains("time")) {
-                            try {
-                                String timeContainsText = null;
-                                if (respond.contains("in ")) {
-                                    timeContainsText = respond.split("in ")[1];
-                                } else if (respond.contains("time")) {
-                                    timeContainsText = respond.split("time")[1];
-
-                                }
-                                if (timeContainsText == null || timeContainsText.replaceAll(" ", "").equals("")) {
-                                    dospeak("can you repeat the command sir?");
-                                    System.out.println("repeat command");
-                                    return;
-                                }
-
-                                boolean found = false;
-                                String[] wordsList = timeContainsText.split(" ");
-                                for (String time : wordsList) {
-
-//                            String time = timeContainsText.split(" ")[0];
-                                    String timeUnit = timeContainsText.substring(time.length(), timeContainsText.length());
-                                    int number = 0;
-                                    try {
-                                        number = Integer.parseInt(time);
-                                    } catch (Exception e) {
-                                        number = inNumerals(time);
-
-                                    }
-                                    if (number == 0 && (!time.equals("0") || !time.equals("00") || !time.equalsIgnoreCase("zero"))) {
-                                        continue;
-                                    }
-                                    found = true;
-                                    if (timeUnit.contains("minute")) {
-                                        if (number > 1) {
-                                            timeUnit = "minutes";
-                                        } else {
-                                            timeUnit = "minute";
-                                        }
-                                    } else if (timeUnit.contains("sec")) {
-                                        if (number > 1) {
-                                            timeUnit = "seconds";
-                                        } else {
-                                            timeUnit = "second";
-                                        }
-                                    } else if (timeUnit.contains("hour")) {
-                                        if (number > 1) {
-                                            timeUnit = "hours";
-                                        } else {
-                                            timeUnit = "hour";
-                                        }
-                                    } else if (number > 1) {
-                                        timeUnit = "minutes";
-                                    } else {
-                                        timeUnit = "minute";
-                                    }
-
-                                    turnOffDeviceInNTime(outCommand, number, timeUnit);
-                                }
-                                if (!found) {
-                                    System.out.println("Can you repeat the command sir ?");
-
-                                    dospeak("Can you repeat the command sir ?");
-
-                                }
-
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        } else {
-                            turnOffDevice(outCommand);
-                        }
-                    }
-                }
-                respond = "";
-                lastProcessRespond = "";
-            } else if (respond.replaceAll(
-                    " ", "").contains(name + "hi") || respond.replaceAll(" ", "").contains(name + "hello")
-                    || respond.replaceAll(" ", "").contains("hi" + name) || respond.replaceAll(" ", "").contains("hello" + name)) {
-                welcome();
-                respond = "";
-                lastProcessRespond = "";
-            } else if (respond.replaceAll(
-                    " ", "").contains(name + "aresokind") || respond.replaceAll(" ", "").contains("aresokind" + name)) {
-                dospeak("Thank you sir.");
-                respond = "";
-                lastProcessRespond = "";
-            } else if (respond.replaceAll(
-                    " ", "").contains(name + "what") && (respond.replaceAll(" ", "").contains("mission" + name)
-                    || respond.replaceAll(" ", "").contains("purpose" + name) || respond.replaceAll(" ", "").contains("aim" + name)
-                    || respond.replaceAll(" ", "").contains("aim" + name) || respond.replaceAll(" ", "").contains("aim" + name))) {
-                dospeak("My purpose is to surve as good as I can my master.");
-                respond = "";
-                lastProcessRespond = "";
-            } else if (respond.replaceAll(
-                    " ", "").contains(name + "hi") || respond.replaceAll(" ", "").contains(name + "hello")
-                    || respond.replaceAll(" ", "").contains("hi" + name) || respond.replaceAll(" ", "").contains("hello" + name)) {
-                dospeak("wellcome sir");
-                respond = "";
-                lastProcessRespond = "";
-            } else if (respond.replaceAll(
-                    " ", "").contains(name + "stop") || respond.replaceAll(" ", "").contains(name + "cancel")) {
-                stopSpeak();
-                respond = "";
-                lastProcessRespond = "";
-            } else if (respond.replaceAll(
-                    " ", "").contains(name + "bye") || respond.replaceAll(" ", "").contains("bye" + name)
-                    || respond.replaceAll(" ", "").contains(name + "goodbye") || respond.replaceAll(" ", "").contains("goodbye" + name)
-                    || respond.replaceAll(" ", "").contains(name + "see you") || respond.replaceAll(" ", "").contains("see you" + name)) {
-
-                turnEverythingOff();
-                respond = "";
-                lastProcessRespond = "";
-            } else if ((respond.replaceAll(
-                    " ", "").contains("find") || respond.replaceAll(" ", "").contains("whereis"))
-                    && (respond.replaceAll(" ", "").contains("phone") || respond.replaceAll(" ", "").contains("mobile"))) {
-                System.out.println("findMobile search");
-                findMobile();
-                respond = "";
-                lastProcessRespond = "";
-            } else if (respond.replaceAll(
-                    " ", "").contains(name + "about") || respond.replaceAll(" ", "").contains("about" + name)) {
-                dospeak("I am a smart house application, made by nikos Gaitanis, known as tsoglani!.My purpose is to surve my master.");
-                respond = "";
-                lastProcessRespond = "";
-            } else if (respond.replaceAll(
-                    " ", "").contains(name + "info") || respond.replaceAll(" ", "").contains("info" + name)
-                    || respond.replaceAll(" ", "").contains(name + "information") || respond.replaceAll(" ", "").contains("information" + name)) {
-                dospeak("I am authorized to turn on or off the electrical devices, and asnswear to some of your question master.");
-                respond = "";
-                lastProcessRespond = "";
-            } else if (respond.replaceAll(
-                    " ", "").contains("clever") && respond.replaceAll(" ", "").contains("areyou")) {
-                dospeak("I am as cleven as a mashine can be sir.");
-                respond = "";
-                lastProcessRespond = "";
-            } else if (respond.replaceAll(
-                    " ", "").contains("clever") && (respond.replaceAll(" ", "").contains("nick") || respond.replaceAll(" ", "").contains("nikos")
-                    || respond.replaceAll(" ", "").contains("tsoglani") || respond.replaceAll(" ", "").contains("master") || respond.replaceAll(" ", "").contains("boss"))) {
-                dospeak("Yes, he is very clever, I could say he is a jenious.");
-                respond = "";
-                lastProcessRespond = "";
-            } else if (respond.replaceAll(
-                    " ", "").contains("howoldareyou" + name) || respond.replaceAll(" ", "").contains(name + "howoldareyou")
-                    || respond.replaceAll(" ", "").contains("isyourage")) {
-                dospeak("I am a machine, I have no age, I am imortal.");
-                respond = "";
-                lastProcessRespond = "";
-            } else if (respond.replaceAll(
-                    " ", "").contains("boss") || respond.replaceAll(" ", "").contains(name + "nick") || respond.replaceAll(" ", "").contains(name + "nikos")
-                    || respond.replaceAll(" ", "").contains(name + "tsoglani") || respond.replaceAll(" ", "").contains(name + "master")
-                    && (respond.replaceAll(" ", "").contains("pussy") || respond.replaceAll(" ", "").contains("gay") || respond.replaceAll(" ", "").contains("homo")
-                    || respond.replaceAll(" ", "").contains("stupid") || respond.replaceAll(" ", "").contains("motherfucker") || respond.replaceAll(" ", "").contains("suck")
-                    || respond.replaceAll(" ", "").contains("sucker") || respond.replaceAll(" ", "").contains("fool") || respond.replaceAll(" ", "").contains("simp")
-                    || respond.replaceAll(" ", "").contains("dupe") || respond.replaceAll(" ", "").contains("simpleton") || respond.replaceAll(" ", "").contains("moron")
-                    || respond.replaceAll(" ", "").contains("jackass") || respond.replaceAll(" ", "").contains("goof") || respond.replaceAll(" ", "").contains("slob")
-                    || respond.replaceAll(" ", "").contains("booby") || respond.replaceAll(" ", "").contains("duffer") || respond.replaceAll(" ", "").contains("idiot"))) {
-
-                dospeak("No he is not, beware your words for my master sir.");
-                respond = "";
-                lastProcessRespond = "";
-            } else if (respond.replaceAll(
-                    " ", "").contains("whatisyourname") || respond.replaceAll(" ", "").contains("what'syourname")) {
-                if (name.replaceAll(" ", "").equals("")) {
-                    dospeak("I have no name.");
-                } else {
-                    dospeak("My name is " + name + " sir.");
-                }
-                respond = "";
-                lastProcessRespond = "";
-            } else if (respond.replaceAll(
-                    " ", "").contains("weatherin" + name) || respond.replaceAll(" ", "").contains(name + "weatherin")) {
-                String[] list = respond.split("weather in");
-                try {
-                    if (list.length > 1) {
-                        String curentCity = list[1];
-                        if (curentCity.length() > 1) {
-                            if (curentCity.contains(" of ")) {
-                                String[] surentList = curentCity.split(" of ");
-                                curentCity = surentList[0];
-                                String countryCode = surentList[1];
-                                String weatherInfo = weather.getWeather(curentCity.substring(1, curentCity.length()), countryCode);
-                                dospeak(weatherInfo);
-                            } else if (curentCity != null && !curentCity.equals("")) {
-                                String weatherInfo = weather.getWeather(curentCity.substring(1, curentCity.length()));
-                                dospeak(weatherInfo);
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-//            dospeak("wellcome sir");
-
-//            String weatherInfo = weather.getWeather(curentCity);
-//            dospeak(weatherInfo);
-                respond = "";
-                lastProcessRespond = "";
-            } else if (respond.replaceAll(
-                    " ", "").contains("weather" + name) || respond.replaceAll(" ", "").contains(name + "weather")) {
-
-                String weatherInfo;
-                if (respond.replaceAll(" ", "").contains("forecast")) {
-                    weatherInfo = weather.getForecastWeatherAtCity("Ierapetra");
-
-                } else {
-                    weatherInfo = weather.getWeather("Ierapetra");
-                }
-                dospeak(weatherInfo);
-                respond = "";
-                lastProcessRespond = "";
-            } else if (respond.replaceAll(
-                    " ", "").contains("whatis") && respond.replaceAll(" ", "").contains(name)
-                    || respond.replaceAll(" ", "").contains(name + "whatis")
-                    || respond.replaceAll(" ", "").contains("what's") && respond.replaceAll(" ", "").contains(name)
-                    || respond.replaceAll(" ", "").contains(name + "what's")
-                    || respond.replaceAll(" ", "").contains("search") && respond.replaceAll(" ", "").contains(name)) {
-
-                String spStr = null;
-                try {
-
-                    if (respond.replaceAll(" ", "").contains("whatis")) {
-                        spStr = getFromWiki(respond.split("what is")[1]);
-                    } else if (respond.replaceAll(" ", "").contains("what's")) {
-                        spStr = getFromWiki(respond.split("what's")[1]);
-                    } else if (respond.replaceAll(" ", "").contains("search")) {
-                        spStr = getFromWiki(respond.split("search")[1]);
-                    }
-                    if (spStr != null) {
-//                    System.out.println("getFromWiki:" + spStr);
-                        dospeak(spStr);
-
-                    }
-                } catch (Exception ex) {
-                    Logger.getLogger(Jarvis.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                respond = "";
-                lastProcessRespond = "";
-            } else if (respond.replaceAll(
-                    " ", "").contains("pause" + name) || respond.replaceAll(
-                    " ", "").contains(name + "pause")) {
-                pauseAudio();
-            } else if (respond.replaceAll(
-                    " ", "").contains("resume" + name) || respond.replaceAll(
-                    " ", "").contains(name + "resume")) {
-                resumeAudio();
-            } else if (respond.replaceAll(
-                    " ", "").contains("playaudio" + name)
-                    || respond.replaceAll(" ", "").contains(name + "playaudio")
-                    || respond.replaceAll(" ", "").contains("playsound" + name)
-                    || respond.replaceAll(" ", "").contains(name + "playsound")
-                    || respond.replaceAll(" ", "").contains("playmusic" + name)
-                    || respond.replaceAll(" ", "").contains(name + "playmusic")
-                    || respond.replaceAll(" ", "").contains("playsong" + name)
-                    || respond.replaceAll(" ", "").contains(name + "playsong")) {
-
-                dospeak("right away sir.");
-                playAudio();
-                respond = "";
-                lastProcessRespond = "";
-            } else if (respond.replaceAll(
-                    " ", "").contains("nextsong")
-                    || respond.replaceAll(" ", "").contains("next")) {
-                nextSong();
-
-            } else if (respond.replaceAll(
-                    " ", "").contains("previous")
-                    || respond.replaceAll(" ", "").contains("previoussong")) {
-                previousSong();
-                respond = "";
-                lastProcessRespond = "";
-            } else if (respond.replaceAll(
-                    " ", "").contains("howareyou" + name) || respond.replaceAll(" ", "").contains(name + "howareyou")) {
-                dospeak("I am fine sir, thanks for asking. Would you like something else.");
-            } else if (!respond.contains(respond)) {
-                respond += " " + respond;
             }
-        }
+        } else if (respond.replaceAll(
+                " ", "").contains(name + "hi") || respond.replaceAll(" ", "").contains(name + "hello")
+                || respond.replaceAll(" ", "").contains("hi" + name) || respond.replaceAll(" ", "").contains("hello" + name)) {
+            welcome();
+            respond = "";
+            lastProcessRespond = "";
+        } else if (respond.replaceAll(
+                " ", "").contains(name + "aresokind") || respond.replaceAll(" ", "").contains("aresokind" + name)) {
+            dospeak("Thank you sir.");
+            respond = "";
+            lastProcessRespond = "";
+        } else if (respond.replaceAll(
+                " ", "").contains(name + "what") && (respond.replaceAll(" ", "").contains("mission" + name)
+                || respond.replaceAll(" ", "").contains("purpose" + name) || respond.replaceAll(" ", "").contains("aim" + name)
+                || respond.replaceAll(" ", "").contains("aim" + name) || respond.replaceAll(" ", "").contains("aim" + name))) {
+            dospeak("My purpose is to surve as good as I can my master.");
+            respond = "";
+            lastProcessRespond = "";
+        } else if (respond.replaceAll(
+                " ", "").contains(name + "hi") || respond.replaceAll(" ", "").contains(name + "hello")
+                || respond.replaceAll(" ", "").contains("hi" + name) || respond.replaceAll(" ", "").contains("hello" + name)) {
+            dospeak("wellcome sir");
+            respond = "";
+            lastProcessRespond = "";
+        } else if (respond.replaceAll(
+                " ", "").contains(name + "stop") || respond.replaceAll(" ", "").contains(name + "cancel")) {
+            stopSpeak();
+            respond = "";
+            lastProcessRespond = "";
+        } else if (respond.replaceAll(
+                " ", "").contains(name + "bye") || respond.replaceAll(" ", "").contains("bye" + name)
+                || respond.replaceAll(" ", "").contains(name + "goodbye") || respond.replaceAll(" ", "").contains("goodbye" + name)
+                || respond.replaceAll(" ", "").contains(name + "see you") || respond.replaceAll(" ", "").contains("see you" + name)) {
+
+            turnEverythingOff();
+            respond = "";
+            lastProcessRespond = "";
+        } else if ((respond.replaceAll(
+                " ", "").contains("find") || respond.replaceAll(" ", "").contains("whereis"))
+                && (respond.replaceAll(" ", "").contains("phone") || respond.replaceAll(" ", "").contains("mobile"))) {
+            System.out.println("findMobile search");
+            findMobile();
+            respond = "";
+            lastProcessRespond = "";
+        } else if (respond.replaceAll(
+                " ", "").contains(name + "about") || respond.replaceAll(" ", "").contains("about" + name)) {
+            dospeak("I am a smart house application, made by nikos Gaitanis, known as tsoglani!.My purpose is to surve my master.");
+            respond = "";
+            lastProcessRespond = "";
+        } else if (respond.replaceAll(
+                " ", "").contains(name + "info") || respond.replaceAll(" ", "").contains("info" + name)
+                || respond.replaceAll(" ", "").contains(name + "information") || respond.replaceAll(" ", "").contains("information" + name)) {
+            dospeak("I am authorized to turn on or off the electrical devices, and asnswear to some of your question master.");
+            respond = "";
+            lastProcessRespond = "";
+        } else if (respond.replaceAll(
+                " ", "").contains("clever") && respond.replaceAll(" ", "").contains("areyou")) {
+            dospeak("I am as cleven as a mashine can be sir.");
+            respond = "";
+            lastProcessRespond = "";
+        } else if ((respond.replaceAll(
+                " ", "").contains("clever") || respond.replaceAll(
+                " ", "").contains("smart") || respond.replaceAll(
+                " ", "").contains("intelligent") || respond.replaceAll(
+                " ", "").contains("ingenious") || respond.replaceAll(
+                " ", "").contains("brainy") || respond.replaceAll(
+                " ", "").contains("elegant") || respond.replaceAll(
+                " ", "").contains("smart"))
+                && (respond.replaceAll(" ", "").contains("nick") || respond.replaceAll(" ", "").contains("nikos")
+                || respond.replaceAll(" ", "").contains("tsoglani") || respond.replaceAll(" ", "").contains("master") || respond.replaceAll(" ", "").contains("boss"))) {
+            dospeak("Yes, he is very clever, I could also say he is a jenious.");
+            respond = "";
+            lastProcessRespond = "";
+        } else if (respond.replaceAll(
+                " ", "").contains("howoldareyou" + name) || respond.replaceAll(" ", "").contains(name + "howoldareyou")
+                || respond.replaceAll(" ", "").contains("isyourage")) {
+            dospeak("I am a machine, I have no age, I am imortal.");
+            respond = "";
+            lastProcessRespond = "";
+        } else if (respond.replaceAll(
+                " ", "").contains("boss") || respond.replaceAll(" ", "").contains(name + "nick") || respond.replaceAll(" ", "").contains(name + "nikos")
+                || respond.replaceAll(" ", "").contains(name + "tsoglani") || respond.replaceAll(" ", "").contains(name + "master")
+                && (respond.replaceAll(" ", "").contains("pussy") || respond.replaceAll(" ", "").contains("gay") || respond.replaceAll(" ", "").contains("homo")
+                || respond.replaceAll(" ", "").contains("stupid") || respond.replaceAll(" ", "").contains("motherfucker") || respond.replaceAll(" ", "").contains("suck")
+                || respond.replaceAll(" ", "").contains("sucker") || respond.replaceAll(" ", "").contains("fool") || respond.replaceAll(" ", "").contains("simp")
+                || respond.replaceAll(" ", "").contains("dupe") || respond.replaceAll(" ", "").contains("simpleton") || respond.replaceAll(" ", "").contains("moron")
+                || respond.replaceAll(" ", "").contains("jackass") || respond.replaceAll(" ", "").contains("goof") || respond.replaceAll(" ", "").contains("slob")
+                || respond.replaceAll(" ", "").contains("booby") || respond.replaceAll(" ", "").contains("duffer") || respond.replaceAll(" ", "").contains("idiot"))) {
+
+            dospeak("No he is not, beware your words for my master sir.");
+            respond = "";
+            lastProcessRespond = "";
+        } else if (respond.replaceAll(
+                " ", "").contains("whatisyourname") || respond.replaceAll(" ", "").contains("what'syourname") || respond.replaceAll(" ", "").contains("whoareyou")) {
+            if (name.replaceAll(" ", "").equals("")) {
+                dospeak("I have no name.");
+            } else {
+                dospeak("My name is " + name + " sir.");
+            }
+            respond = "";
+            lastProcessRespond = "";
+        } else if (respond.replaceAll(
+                " ", "").contains("pause" + name) || respond.replaceAll(
+                " ", "").contains(name + "pause")) {
+            pauseAudio();
+        } else if (respond.replaceAll(
+                " ", "").contains("resume" + name) || respond.replaceAll(
+                " ", "").contains(name + "resume")) {
+            resumeAudio();
+        } else if (respond.replaceAll(
+                " ", "").contains("playaudio" + name)
+                || respond.replaceAll(" ", "").contains(name + "playaudio")
+                || respond.replaceAll(" ", "").contains("playsound" + name)
+                || respond.replaceAll(" ", "").contains(name + "playsound")
+                || respond.replaceAll(" ", "").contains("playmusic" + name)
+                || respond.replaceAll(" ", "").contains(name + "playmusic")
+                || respond.replaceAll(" ", "").contains("playsong" + name)
+                || respond.replaceAll(" ", "").contains(name + "playsong")) {
+
+            dospeak("right away sir.");
+            playAudio();
+            respond = "";
+            lastProcessRespond = "";
+        } else if (respond.replaceAll(
+                " ", "").contains("nextsong")
+                || respond.replaceAll(" ", "").contains("next")) {
+            nextSong();
+
+        } else if (respond.replaceAll(
+                " ", "").contains("previous")
+                || respond.replaceAll(" ", "").contains("previoussong")) {
+            previousSong();
+            respond = "";
+            lastProcessRespond = "";
+        } else if (respond.replaceAll(
+                " ", "").contains("howareyou" + name) || respond.replaceAll(" ", "").contains(name + "howareyou")) {
+            dospeak("I am fine sir, thanks for asking. Would you like something else.");
+        } else if (!respond.contains(respond)) {
+            respond += " " + respond;
+        } //            }
     }
 
     private void findMobile() {
@@ -1351,7 +1371,8 @@ public class Jarvis {
     int timeCounter;
 
     private void alarmAtTime(int hour, int min) {
-
+        hour = hour % 24;
+        min = min % 60;
         try {
             System.out.println("activate alarm");
 
@@ -1505,11 +1526,13 @@ public class Jarvis {
 
     private void closeAll() {//// implement gpiopins
         System.out.println("close all");
+        dospeak("right away sir.");
 
     }
 
     private void openAll() {//// implement gpiopins
         System.out.println("open all");
+        dospeak("right away sir.");
 
     }
 
@@ -1520,25 +1543,32 @@ public class Jarvis {
 
     private void turnOnAllDeviceExeptInNTime(String deviceNotToClose, int time, String timeUnit) {//// implement gpiopins
         System.out.println("open all devices except " + deviceNotToClose + " in " + time + " " + timeUnit);
+        dospeak("right away sir.");
+
     }
 
     private void turnOffAllDeviceInNTime(int time, String timeUnit) {//// implement gpiopins
         System.out.println("close all in " + time + " " + timeUnit);
+        dospeak("right away sir.");
 
     }
 
     private void turnOnAllDeviceInNTime(int time, String timeUnit) {//// implement gpiopins
         System.out.println("open all in " + time + " " + timeUnit);
+        dospeak("right away sir.");
 
     }
 
     private void closeAllExcept(String commandNotClose) {//// implement gpiopins
         System.out.println("close all except " + commandNotClose);
+        dospeak("right away sir.");
+        dospeak("right away sir.");
 
     }
 
     private void openAllExcept(String commandNotClose) {//// implement gpiopins
         System.out.println("open all except " + commandNotClose);
+        dospeak("right away sir.");
     }
 
     private void turnOffDevice(String device) {//// implement gpiopins
@@ -1949,12 +1979,13 @@ public class Jarvis {
     private static final String DATE_FORMAT = "yyyy/MM/dd HH:mm:ss";
 
     private String getDateAndTimeIn(String city) {
-
+        city = capitalize(city);
         return "Date is " + getDateIN(city, false) + ", curent time is " + getTimeIn(city, false) + " sir.";
     }
 
     private String getTimeIn(String city, boolean extraInfo) {
         ZonedDateTime zoneDateTime = null;
+        city = capitalize(city);
         for (int i = 0; i < CodeList.length; i++) {
             try {
                 String code = CodeList[0];
@@ -2001,6 +2032,8 @@ public class Jarvis {
 
     private String getDateIN(String city, boolean extraInfo) {
 
+        city = capitalize(city);
+
 //       DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 //        //get current date time with Date()
         ZonedDateTime zoneDateTime = null;
@@ -2038,7 +2071,7 @@ public class Jarvis {
 
         String dateString = format.format(zoneDateTime).split(" ")[0];
 
-        String output="";
+        String output = "";
 
         String[] numList = dateString.split("/");
         for (int i = numList.length - 1; i >= 0; i--) {
@@ -2058,11 +2091,20 @@ public class Jarvis {
         }
         System.out.println(output);
 
-
         if (extraInfo) {
             output = "Date in " + city + " is " + output + " sir.";
         }
         return output;
+    }
+
+    public String capitalize(String string) {
+        if (string == null || string.length() == 0) {
+            return string;
+        }
+        string = string.toLowerCase();
+        char c[] = string.toCharArray();
+        c[0] = Character.toUpperCase(c[0]);
+        return new String(c);
     }
 
 }
