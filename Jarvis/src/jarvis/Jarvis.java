@@ -34,6 +34,7 @@ import java.util.Date;
 import java.util.Random;
 import org.joda.time.DateTime;
 import static java.lang.Thread.sleep;
+import static java.lang.Thread.sleep;
 
 /**
  *
@@ -69,6 +70,7 @@ public class Jarvis {
     Thread playerThread;
 
     // samples ::
+    // 1 command per time not support multiple commands
     //in ten minutes turn kitchen lights off etc.
     //turn kitchen lights off 
     // how are you
@@ -120,18 +122,19 @@ public class Jarvis {
 //        playAudio();
 //        findMobile();
         weather = new Weather();
-        processRespond("how old are you");
-
+        boolean isCommandExcecuted = processRespond("turn on  kitchen lights ");
+        System.out.println("command excecuted " + isCommandExcecuted);
         gSpeechListener = new GSpeechResponseListener() {
 //            String old_text = "";
 
             public void onResponse(GoogleResponse gr) {
-
+                boolean isCommandExcecuted = false;
                 System.out.println(gr.getResponse());
                 if (gr.getResponse() == null || gr.getResponse().replaceAll(" ", "").equalsIgnoreCase("")) {
-                    processRespond(bigOutput);
-                    System.out.println("output=" + output + "  ::prevOut=" + bigOutput);
+                    isCommandExcecuted = processRespond(bigOutput);
+                    System.out.println("is command excecuted " + isCommandExcecuted);
 
+//                    System.out.println("output=" + output + "  ::prevOut=" + bigOutput);
                     bigOutput = "";
                     output = "";
                     counter = 0;
@@ -224,7 +227,8 @@ public class Jarvis {
         duplex.addResponseListener(gSpeechListener);
     }
 
-    private void processRespond(String respond) {
+    private boolean processRespond(String respond) {
+        boolean hasCommandFound = false;
         lastProcessRespond = respond;
 
         boolean foundCommand = false;
@@ -253,7 +257,7 @@ public class Jarvis {
                         if (timeContainsText == null || timeContainsText.replaceAll(" ", "").equals("")) {
                             dospeak("can you repeat the command sir?");
                             System.out.println("repeat command");
-                            return;
+                            return false;
                         }
 
                         String[] wordsList = timeContainsText.split(" ");
@@ -299,8 +303,10 @@ public class Jarvis {
                             String cmd = respond.split("except")[1];
                             for (String str : SH.outputPowerCommands) {
                                 if (cmd.contains(str)) {
+                                    System.out.println("containsss");
                                     foundCommand = true;
                                     turnOnAllDeviceExeptInNTime(str, number, timeUnit);
+                                    hasCommandFound = true;
                                     break;
                                 }
                             }
@@ -316,8 +322,17 @@ public class Jarvis {
                         e.printStackTrace();
                     }
                 } else {
-                    foundCommand = true;
-                    openAllExcept(respond.split("except")[1]);
+                    
+                     for (String str : SH.outputPowerCommands) {
+                                if (respond.split("except")[1].contains(str)) {
+                                    System.out.println("containsss");
+                                    foundCommand = true;
+                                    openAllExcept(str);
+                                    hasCommandFound = true;
+                                    break;
+                                }
+                            }
+                    
                 }
 
             } else if (respond.contains("in ") || respond.contains("time")) {
@@ -331,7 +346,7 @@ public class Jarvis {
 
                     }
                     if (timeContainsText == null) {
-                        return;
+                        return false;
                     }
 
                     String[] wordsList = timeContainsText.split(" ");
@@ -374,6 +389,7 @@ public class Jarvis {
                             timeUnit = "minute";
                         }
                         foundCommand = true;
+                        hasCommandFound = true;
                         turnOnAllDeviceInNTime(number, timeUnit);
                     }
                     if (!found) {
@@ -388,6 +404,8 @@ public class Jarvis {
                 }
             } else {
                 foundCommand = true;
+                hasCommandFound = true;
+                
                 openAll();
             }
 //            if (found) {
@@ -417,7 +435,7 @@ public class Jarvis {
                             if (timeContainsText == null || timeContainsText.replaceAll(" ", "").equals("")) {
                                 dospeak("can you repeat the command sir?");
                                 System.out.println("repeat command");
-                                return;
+                                return false;
                             }
 
                             String[] wordsList = timeContainsText.split(" ");
@@ -460,6 +478,7 @@ public class Jarvis {
                                     timeUnit = "minute";
                                 }
                                 foundCommand = true;
+                                hasCommandFound = true;
                                 turnOnDeviceInNTime(outCommand, number, timeUnit);
                             }
                             if (!found) {
@@ -473,8 +492,18 @@ public class Jarvis {
                             e.printStackTrace();
                         }
                     } else {
-                        foundCommand = true;
-                        turnOnDevice(outCommand);
+//                        foundCommand = true;
+//                        hasCommandFound = true;
+                        for (String str : SH.outputPowerCommands) {
+                                if (outCommand.contains(str)) {
+                                    System.out.println("containsss");
+                                    foundCommand = true;
+                                    turnOnDevice(str);
+                                    hasCommandFound = true;
+                                    break;
+                                }
+                            }
+//                        turnOnDevice(outCommand);
                     }
                 }
             }
@@ -502,7 +531,7 @@ public class Jarvis {
                         if (timeContainsText == null || timeContainsText.replaceAll(" ", "").equals("")) {
                             dospeak("can you repeat the command sir?");
                             System.out.println("repeat command");
-                            return;
+                            return false;
                         }
 
                         boolean found = false;
@@ -551,6 +580,7 @@ public class Jarvis {
                                 if (cmd.contains(str)) {
                                     foundCommand = true;
                                     turnOffAllDeviceExeptInNTime(str, number, timeUnit);
+                                    hasCommandFound = true;
                                     break;
                                 }
                             }
@@ -566,8 +596,18 @@ public class Jarvis {
                         e.printStackTrace();
                     }
                 } else {
-                    foundCommand = true;
-                    closeAllExcept(respond.split("except")[1]);
+//                    foundCommand = true;
+//                    hasCommandFound = true;
+//                    
+                       for (String str : SH.outputPowerCommands) {
+                                if (respond.split("except")[1].contains(str)) {
+                                    System.out.println("containsss");
+                                    foundCommand = true;
+                                    closeAllExcept(str);
+                                    hasCommandFound = true;
+                                    break;
+                                }
+                            }
                 }
 
             } else if (respond.contains("in ") || respond.contains("time")) {
@@ -582,7 +622,7 @@ public class Jarvis {
                     if (timeContainsText == null || timeContainsText.replaceAll(" ", "").equals("")) {
                         dospeak("can you repeat the command sir?");
                         System.out.println("repeat command");
-                        return;
+                        return false;
                     }
 
                     boolean found = false;
@@ -626,6 +666,7 @@ public class Jarvis {
                             timeUnit = "minute";
                         }
                         foundCommand = true;
+                        hasCommandFound = true;
                         turnOffAllDeviceInNTime(number, timeUnit);
                     }
                     if (!found) {
@@ -640,6 +681,7 @@ public class Jarvis {
                 }
             } else {
                 foundCommand = true;
+                hasCommandFound = true;
                 closeAll();
             }
 //            if (foundCommand) {
@@ -670,7 +712,7 @@ public class Jarvis {
                             if (timeContainsText == null || timeContainsText.replaceAll(" ", "").equals("")) {
                                 dospeak("can you repeat the command sir?");
                                 System.out.println("repeat command");
-                                return;
+                                return false;
                             }
 
                             boolean found = false;
@@ -714,6 +756,7 @@ public class Jarvis {
                                     timeUnit = "minute";
                                 }
                                 foundCommand = true;
+                                hasCommandFound = true;
                                 turnOffDeviceInNTime(outCommand, number, timeUnit);
                             }
                             if (!found) {
@@ -727,8 +770,18 @@ public class Jarvis {
                             e.printStackTrace();
                         }
                     } else {
-                        foundCommand = true;
-                        turnOffDevice(outCommand);
+//                        foundCommand = true;
+//                        hasCommandFound = true;
+//                        turnOffDevice(outCommand);
+                           for (String str : SH.outputPowerCommands) {
+                                if (outCommand.contains(str)) {
+                                    System.out.println("containsss");
+                                    foundCommand = true;
+                                    turnOffDevice(str);
+                                    hasCommandFound = true;
+                                    break;
+                                }
+                            }
                     }
                 }
             }
@@ -755,6 +808,7 @@ public class Jarvis {
                 if (spStr != null) {
 //                    System.out.println("getFromWiki:" + spStr);
                     dospeak(spStr);
+                    hasCommandFound = true;
                     foundCommand = true;
                 }
             } catch (Exception ex) {
@@ -779,9 +833,11 @@ public class Jarvis {
                             String countryCode = surentList[1];
                             String weatherInfo = weather.getWeather(curentCity.substring(1, curentCity.length()), countryCode);
                             dospeak(weatherInfo);
+                            hasCommandFound = true;
                         } else if (curentCity != null && !curentCity.equals("")) {
                             String weatherInfo = weather.getWeather(curentCity.substring(1, curentCity.length()));
                             dospeak(weatherInfo);
+                            hasCommandFound = true;
                         }
                     }
                 }
@@ -804,6 +860,7 @@ public class Jarvis {
             } else {
                 weatherInfo = weather.getWeather("Ierapetra");
             }
+            hasCommandFound = true;
             dospeak(weatherInfo);
             respond = "";
             lastProcessRespond = "";
@@ -814,6 +871,7 @@ public class Jarvis {
                     String info = getDateAndTimeIn(s);
                     if (info != null) {
                         dospeak(info);
+                        hasCommandFound = true;
                     }
                 }
             }
@@ -830,12 +888,12 @@ public class Jarvis {
                 " ", "").contains("get") || respond.replaceAll(
                 " ", "").contains("local") || respond.replaceAll(
                 " ", "").contains("now"))) {//diary	
-
+            hasCommandFound = true;
             dospeak(getDate());
         } else if (respond.replaceAll(
                 " ", "").contains("day" + name) && respond.replaceAll(
                 " ", "").contains(name + "today")) {
-
+            hasCommandFound = true;
             dospeak(getStringDate() + " sir.");
         } else if (respond.replaceAll(
                 " ", "").contains("time") && (respond.replaceAll(
@@ -843,6 +901,7 @@ public class Jarvis {
                 " ", "").contains("get") || respond.replaceAll(
                 " ", "").contains("local") || respond.replaceAll(
                 " ", "").contains("now"))) {
+            hasCommandFound = true;
             dospeak(getCurentTime());
         } else if (respond.replaceAll(" ", "").contains(name + "timein") || respond.replaceAll(" ", "").contains("currenttime")
                 || (respond.replaceAll(" ", "").contains("now") && respond.replaceAll(" ", "").contains("time"))) {
@@ -854,6 +913,7 @@ public class Jarvis {
                     String info = getTimeIn(s, true);
                     if (info != null) {
                         dospeak(info);
+                        hasCommandFound = true;
                     }
                 }
             }
@@ -865,6 +925,7 @@ public class Jarvis {
                     String info = getDateIN(s, true);
                     if (info != null) {
                         dospeak(info);
+                        hasCommandFound = true;
                     }
                 }
             }
@@ -875,6 +936,7 @@ public class Jarvis {
                     String timeContainsText = null;
                     if (respond.contains("in ")) {
                         timeContainsText = respond.split("in ")[1];
+
                     } else if (respond.contains("time")) {
                         timeContainsText = respond.split("time")[1];
 
@@ -882,7 +944,7 @@ public class Jarvis {
                     if (timeContainsText == null || timeContainsText.replaceAll(" ", "").equals("")) {
                         dospeak("can you repeat the command sir?");
                         System.out.println("repeat command");
-                        return;
+                        return false;
                     }
 
                     boolean found = false;
@@ -902,6 +964,7 @@ public class Jarvis {
                             continue;
                         }
                         found = true;
+
                         System.out.println(timeUnit);
                         if (timeUnit.contains("minute")) {
                             if (number > 1) {
@@ -928,6 +991,7 @@ public class Jarvis {
                         }
 
                         alarmInNTime(number, timeUnit, true);
+                        hasCommandFound = true;
                     }
                     if (!found) {
                         System.out.println("Can you repeat the command sir ?");
@@ -1154,7 +1218,7 @@ public class Jarvis {
                 System.out.println("min " + min);
 
                 if (hour != -1 && min != -1) {
-
+                    hasCommandFound = true;
                     alarmAtTime(hour, min);
                 }
                 respond = "";
@@ -1164,11 +1228,13 @@ public class Jarvis {
                 " ", "").contains(name + "hi") || respond.replaceAll(" ", "").contains(name + "hello")
                 || respond.replaceAll(" ", "").contains("hi" + name) || respond.replaceAll(" ", "").contains("hello" + name)) {
             welcome();
+            hasCommandFound = true;
             respond = "";
             lastProcessRespond = "";
         } else if (respond.replaceAll(
                 " ", "").contains(name + "aresokind") || respond.replaceAll(" ", "").contains("aresokind" + name)) {
             dospeak("Thank you sir.");
+            hasCommandFound = true;
             respond = "";
             lastProcessRespond = "";
         } else if (respond.replaceAll(
@@ -1176,17 +1242,20 @@ public class Jarvis {
                 || respond.replaceAll(" ", "").contains("purpose" + name) || respond.replaceAll(" ", "").contains("aim" + name)
                 || respond.replaceAll(" ", "").contains("aim" + name) || respond.replaceAll(" ", "").contains("aim" + name))) {
             dospeak("My purpose is to surve as good as I can my master.");
+            hasCommandFound = true;
             respond = "";
             lastProcessRespond = "";
         } else if (respond.replaceAll(
                 " ", "").contains(name + "hi") || respond.replaceAll(" ", "").contains(name + "hello")
                 || respond.replaceAll(" ", "").contains("hi" + name) || respond.replaceAll(" ", "").contains("hello" + name)) {
             dospeak("wellcome sir");
+            hasCommandFound = true;
             respond = "";
             lastProcessRespond = "";
         } else if (respond.replaceAll(
                 " ", "").contains(name + "stop") || respond.replaceAll(" ", "").contains(name + "cancel")) {
             stopSpeak();
+            hasCommandFound = true;
             respond = "";
             lastProcessRespond = "";
         } else if (respond.replaceAll(
@@ -1195,6 +1264,8 @@ public class Jarvis {
                 || respond.replaceAll(" ", "").contains(name + "see you") || respond.replaceAll(" ", "").contains("see you" + name)) {
 
             turnEverythingOff();
+            hasCommandFound = true;
+
             respond = "";
             lastProcessRespond = "";
         } else if ((respond.replaceAll(
@@ -1202,23 +1273,27 @@ public class Jarvis {
                 && (respond.replaceAll(" ", "").contains("phone") || respond.replaceAll(" ", "").contains("mobile"))) {
             System.out.println("findMobile search");
             findMobile();
+            hasCommandFound = true;
             respond = "";
             lastProcessRespond = "";
         } else if (respond.replaceAll(
                 " ", "").contains(name + "about") || respond.replaceAll(" ", "").contains("about" + name)) {
             dospeak("I am a smart house application, made by nikos Gaitanis, known as tsoglani!.My purpose is to surve my master.");
             respond = "";
+            hasCommandFound = true;
             lastProcessRespond = "";
         } else if (respond.replaceAll(
                 " ", "").contains(name + "info") || respond.replaceAll(" ", "").contains("info" + name)
                 || respond.replaceAll(" ", "").contains(name + "information") || respond.replaceAll(" ", "").contains("information" + name)) {
             dospeak("I am authorized to turn on or off the electrical devices, and asnswear to some of your question master.");
             respond = "";
+            hasCommandFound = true;
             lastProcessRespond = "";
         } else if (respond.replaceAll(
                 " ", "").contains("clever") && respond.replaceAll(" ", "").contains("areyou")) {
             dospeak("I am as cleven as a mashine can be sir.");
             respond = "";
+            hasCommandFound = true;
             lastProcessRespond = "";
         } else if ((respond.replaceAll(
                 " ", "").contains("clever") || respond.replaceAll(
@@ -1232,12 +1307,14 @@ public class Jarvis {
                 || respond.replaceAll(" ", "").contains("tsoglani") || respond.replaceAll(" ", "").contains("master") || respond.replaceAll(" ", "").contains("boss"))) {
             dospeak("Yes, he is very clever, I could also say he is a jenious.");
             respond = "";
+            hasCommandFound = true;
             lastProcessRespond = "";
         } else if (respond.replaceAll(
                 " ", "").contains("howoldareyou" + name) || respond.replaceAll(" ", "").contains(name + "howoldareyou")
                 || respond.replaceAll(" ", "").contains("isyourage")) {
             dospeak("I am a machine, I have no age, I am imortal.");
             respond = "";
+            hasCommandFound = true;
             lastProcessRespond = "";
         } else if (respond.replaceAll(
                 " ", "").contains("boss") || respond.replaceAll(" ", "").contains(name + "nick") || respond.replaceAll(" ", "").contains(name + "nikos")
@@ -1250,6 +1327,7 @@ public class Jarvis {
                 || respond.replaceAll(" ", "").contains("booby") || respond.replaceAll(" ", "").contains("duffer") || respond.replaceAll(" ", "").contains("idiot"))) {
 
             dospeak("No he is not, beware your words for my master sir.");
+            hasCommandFound = true;
             respond = "";
             lastProcessRespond = "";
         } else if (respond.replaceAll(
@@ -1259,15 +1337,18 @@ public class Jarvis {
             } else {
                 dospeak("My name is " + name + " sir.");
             }
+            hasCommandFound = true;
             respond = "";
             lastProcessRespond = "";
         } else if (respond.replaceAll(
                 " ", "").contains("pause" + name) || respond.replaceAll(
                 " ", "").contains(name + "pause")) {
+            hasCommandFound = true;
             pauseAudio();
         } else if (respond.replaceAll(
                 " ", "").contains("resume" + name) || respond.replaceAll(
                 " ", "").contains(name + "resume")) {
+            hasCommandFound = true;
             resumeAudio();
         } else if (respond.replaceAll(
                 " ", "").contains("playaudio" + name)
@@ -1278,7 +1359,7 @@ public class Jarvis {
                 || respond.replaceAll(" ", "").contains(name + "playmusic")
                 || respond.replaceAll(" ", "").contains("playsong" + name)
                 || respond.replaceAll(" ", "").contains(name + "playsong")) {
-
+            hasCommandFound = true;
             dospeak("right away sir.");
             playAudio();
             respond = "";
@@ -1287,11 +1368,13 @@ public class Jarvis {
                 " ", "").contains("nextsong")
                 || respond.replaceAll(" ", "").contains("next")) {
             nextSong();
+            hasCommandFound = true;
 
         } else if (respond.replaceAll(
                 " ", "").contains("previous")
                 || respond.replaceAll(" ", "").contains("previoussong")) {
             previousSong();
+            hasCommandFound = true;
             respond = "";
             lastProcessRespond = "";
         } else if (respond.replaceAll(
@@ -1300,6 +1383,7 @@ public class Jarvis {
         } else if (!respond.contains(respond)) {
             respond += " " + respond;
         } //            }
+        return hasCommandFound;
     }
 
     private void findMobile() {
@@ -1538,6 +1622,7 @@ public class Jarvis {
 
     private void turnOffAllDeviceExeptInNTime(String deviceNotToClose, int time, String timeUnit) {//// implement gpiopins
         System.out.println("close all devices except " + deviceNotToClose + " in " + time + " " + timeUnit);
+        dospeak("right away sir.");
 
     }
 
@@ -1561,7 +1646,6 @@ public class Jarvis {
 
     private void closeAllExcept(String commandNotClose) {//// implement gpiopins
         System.out.println("close all except " + commandNotClose);
-        dospeak("right away sir.");
         dospeak("right away sir.");
 
     }
