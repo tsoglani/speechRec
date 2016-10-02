@@ -34,7 +34,6 @@ import java.util.Date;
 import java.util.Random;
 import org.joda.time.DateTime;
 import static java.lang.Thread.sleep;
-import static java.lang.Thread.sleep;
 
 /**
  *
@@ -118,12 +117,13 @@ public class Jarvis {
     public Jarvis() {
 //        System.out.println("getTimeIn:" + getTimeIn("Greece"));
 
-        dospeak("hello");
+        dospeak("hello sir.");
 //        playAudio();
 //        findMobile();
         weather = new Weather();
-        boolean isCommandExcecuted = processRespond("turn on  kitchen lights ");
+        boolean isCommandExcecuted = processRespond("what is Greece");
         System.out.println("command excecuted " + isCommandExcecuted);
+
         gSpeechListener = new GSpeechResponseListener() {
 //            String old_text = "";
 
@@ -322,17 +322,17 @@ public class Jarvis {
                         e.printStackTrace();
                     }
                 } else {
-                    
-                     for (String str : SH.outputPowerCommands) {
-                                if (respond.split("except")[1].contains(str)) {
-                                    System.out.println("containsss");
-                                    foundCommand = true;
-                                    openAllExcept(str);
-                                    hasCommandFound = true;
-                                    break;
-                                }
-                            }
-                    
+
+                    for (String str : SH.outputPowerCommands) {
+                        if (respond.split("except")[1].contains(str)) {
+                            System.out.println("containsss");
+                            foundCommand = true;
+                            openAllExcept(str);
+                            hasCommandFound = true;
+                            break;
+                        }
+                    }
+
                 }
 
             } else if (respond.contains("in ") || respond.contains("time")) {
@@ -405,7 +405,7 @@ public class Jarvis {
             } else {
                 foundCommand = true;
                 hasCommandFound = true;
-                
+
                 openAll();
             }
 //            if (found) {
@@ -495,14 +495,14 @@ public class Jarvis {
 //                        foundCommand = true;
 //                        hasCommandFound = true;
                         for (String str : SH.outputPowerCommands) {
-                                if (outCommand.contains(str)) {
-                                    System.out.println("containsss");
-                                    foundCommand = true;
-                                    turnOnDevice(str);
-                                    hasCommandFound = true;
-                                    break;
-                                }
+                            if (outCommand.contains(str)) {
+                                System.out.println("containsss");
+                                foundCommand = true;
+                                turnOnDevice(str);
+                                hasCommandFound = true;
+                                break;
                             }
+                        }
 //                        turnOnDevice(outCommand);
                     }
                 }
@@ -599,15 +599,15 @@ public class Jarvis {
 //                    foundCommand = true;
 //                    hasCommandFound = true;
 //                    
-                       for (String str : SH.outputPowerCommands) {
-                                if (respond.split("except")[1].contains(str)) {
-                                    System.out.println("containsss");
-                                    foundCommand = true;
-                                    closeAllExcept(str);
-                                    hasCommandFound = true;
-                                    break;
-                                }
-                            }
+                    for (String str : SH.outputPowerCommands) {
+                        if (respond.split("except")[1].contains(str)) {
+                            System.out.println("containsss");
+                            foundCommand = true;
+                            closeAllExcept(str);
+                            hasCommandFound = true;
+                            break;
+                        }
+                    }
                 }
 
             } else if (respond.contains("in ") || respond.contains("time")) {
@@ -773,15 +773,15 @@ public class Jarvis {
 //                        foundCommand = true;
 //                        hasCommandFound = true;
 //                        turnOffDevice(outCommand);
-                           for (String str : SH.outputPowerCommands) {
-                                if (outCommand.contains(str)) {
-                                    System.out.println("containsss");
-                                    foundCommand = true;
-                                    turnOffDevice(str);
-                                    hasCommandFound = true;
-                                    break;
-                                }
+                        for (String str : SH.outputPowerCommands) {
+                            if (outCommand.contains(str)) {
+                                System.out.println("containsss");
+                                foundCommand = true;
+                                turnOffDevice(str);
+                                hasCommandFound = true;
+                                break;
                             }
+                        }
                     }
                 }
             }
@@ -1253,10 +1253,17 @@ public class Jarvis {
             respond = "";
             lastProcessRespond = "";
         } else if (respond.replaceAll(
-                " ", "").contains(name + "stop") || respond.replaceAll(" ", "").contains(name + "cancel")) {
-            stopSpeak();
-            hasCommandFound = true;
-            respond = "";
+                " ", "").contains(name + "stop") || respond.replaceAll(" ", "").contains("cancel" + name)) {
+            if (respond.replaceAll(
+                    " ", "").contains(name + "stoptimer") || respond.replaceAll(" ", "").contains("stoptimer" + name)) {
+                stopAllTimers();
+                hasCommandFound = true;
+                respond = "";
+            } else {
+                stopSpeak();
+                hasCommandFound = true;
+                respond = "";
+            }
             lastProcessRespond = "";
         } else if (respond.replaceAll(
                 " ", "").contains(name + "bye") || respond.replaceAll(" ", "").contains("bye" + name)
@@ -1593,6 +1600,9 @@ public class Jarvis {
 
     }
 
+    private void stopAllTimers() {//// implement stop all timers in // delete the timers arraylist and send the data to all
+    }
+
     private void turnOnDevice(String device) {//// implement gpiopins
         System.out.println(device + " turned to on");
         dospeak(device + " turned to on");
@@ -1783,32 +1793,55 @@ public class Jarvis {
 
     }
 
-////sudo apt-get install espeak
+    Thread playThread;
+//sudo apt-get install libttspico-utils
+
     public void dospeak(String speaktext) {
         try {
-            //        if (speaktext == null || speaktext.replaceAll(" ", "").equals("")) {
-//            return;
-//        }
-//
-//        if (voice != null) {
-//            voice.deallocate();
-//        }
-//        if (voiceManager == null) {
-//            voiceManager = VoiceManager.getInstance();
-//        }
-//        voice = voiceManager.getVoice(VOICENAME_kevin);
-//        voice.allocate();
-//
-//        voice.speak(speaktext);
-
+            speaktext = speaktext.replaceAll("\\(.*\\)", "");
+            speaktext = speaktext.replaceAll("\\[.*\\]", "");
             if (speechProcess != null) {
+                Runtime.getRuntime().exec("stop lookdave.wav");
+
                 speechProcess.destroyForcibly();
             }
-
+            String extraCommand = "ven-us";
 ////sudo apt-get install espeak
-            speechProcess = Runtime.getRuntime().exec(new String[]{"espeak", '\"' + speaktext + '\"'});
+//           speechProcess = Runtime.getRuntime().exec(new String[]{"pico2wave -w lookdave.wav", '\"' + speaktext + '\"',"\" && aplay lookdave.wav\""});
 
-        } catch (IOException ex) {
+//            speechProcess = Runtime.getRuntime().exec(new String[]{"bash", "pico2wave -w tts.wav", speaktext});
+            speechProcess = Runtime.getRuntime().exec(new String[]{"pico2wave", "-w", "lookdave.wav", '\"' + speaktext + '\"'});
+
+            if (playThread == null) {
+                playThread = new Thread() {
+                    @Override
+                    public void run() {
+                        try {
+                            while (speechProcess.isAlive()) {
+                                Thread.sleep(10);
+                            }
+                            try {
+                                System.out.println("isAlive" + speechProcess.isAlive());
+
+                                if (!speechProcess.isAlive()) {
+                                    speechProcess = Runtime.getRuntime().exec("play lookdave.wav");
+                                }
+                            } catch (IOException ex) {
+                                Logger.getLogger(Jarvis.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+
+                        } catch (InterruptedException ex) {
+                            Logger.getLogger(Jarvis.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        playThread = null;
+                    }
+                };
+                playThread.start();
+            }
+//Runtime.getRuntime().exec("pico2wave -w lookdave.wav \"Look Dave, I can see you're really upset about this.\" && aplay lookdave.wav");
+//                speechProcess = Runtime.getRuntime().exec(new String[]{"espeak", '\"' + speaktext + '\"'});
+//
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
     }

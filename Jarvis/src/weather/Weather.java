@@ -37,7 +37,7 @@ public class Weather {
     public String getWeather(String city) {
         setCurentCityAndCode();
         this.city = city;
-        System.out.println("city0"+city);
+        System.out.println("city0" + city);
         return getWeather(city, countryCode);
 
     }
@@ -71,18 +71,22 @@ public class Weather {
 //                    description += ", Temperature will be around " + Math.round(weather.getTemp() - 273) + " degrees Celsius";
 //                    description += ", Humidity will be at " + weather.getHumidity() + " per cent";
 
+                    if (city.equalsIgnoreCase("ierapetra")) {
+                        city = "hollystone";
+                    }
+
                     if (description.contains("rain") || description.contains("shower")) {
-                       output="No rain measures in " + city + " but reports of " + description;
+                        output = "No rain measures in " + city + " but reports of " + description;
                     } else {
-                       output="No rain measures in " + city + ": " + description;
+                        output = "No rain measures in " + city + ": " + description;
                     }
                 } else {
-                  output="It's raining in " + city + ": " + weather.getPrecipitation() + " mm/h";
+                    output = "It's raining in " + city + ": " + weather.getPrecipitation() + " mm/h";
                 }
-                
-                output+=", Temperature will be around " + Math.round(weather.getTemp() - 273) + " degrees Celsium";
-                output+=", Humidity will be at " + weather.getHumidity() + " per cent";
-                System.out.println("output"+output);
+
+                output += ", Temperature will be around " + Math.round(weather.getTemp() - 273) + " degrees Celsium";
+                output += ", Humidity will be at " + weather.getHumidity() + " per cent";
+                System.out.println("output" + output);
             }
         } catch (IOException ex) {
             Logger.getLogger(Weather.class.getName()).log(Level.SEVERE, null, ex);
@@ -98,12 +102,14 @@ public class Weather {
         this.countryCode = countryCode;
 
         String description = null;
-String output="";
+        String output = "";
         try {
             OwmClient owm = new OwmClient();
             WeatherStatusResponse currentWeather = owm.currentWeatherAtCity(city, countryCode);
             if (currentWeather.hasWeatherStatus()) {
-
+                if (city.equalsIgnoreCase("ierapetra")) {
+                    city = "hollystone";
+                }
                 WeatherData weather = currentWeather.getWeatherStatus().get(0);
 
                 if (weather.getPrecipitation() == Integer.MIN_VALUE) {
@@ -116,18 +122,18 @@ String output="";
 //                    description += ", Humidity is at " + weather.getHumidity() + " per cent";
 
                     if (description.contains("rain") || description.contains("shower")) {
-                        output+="No rain measures in "+ city +" but reports of " + description;
-                       
+                        output += "No rain measures in " + city + " but reports of " + description;
+
                     } else {
-                        output+="No rain measures in " + city + ": " + description;
+                        output += "No rain measures in " + city + ": " + description;
                     }
                 } else {
-                   output+="It's raining in " + city + ": " + weather.getPrecipitation() + " mm/h";
+                    output += "It's raining in " + city + ": " + weather.getPrecipitation() + " mm/h";
                 }
-                
-                output+= ", Temperature is around " + Math.round(weather.getTemp() - 273) + " Celsium";
-                output+= ", Humidity is around " + weather.getHumidity() + " per cent";
-                
+
+                output += ", Temperature is around " + Math.round(weather.getTemp() - 273) + " Celsium";
+                output += ", Humidity is around " + weather.getHumidity() + " per cent";
+
             }
         } catch (IOException ex) {
             Logger.getLogger(Weather.class.getName()).log(Level.SEVERE, null, ex);
